@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>2818B8B9-4C84-49EA-BEF9-066B43A8B237</string>
+	<key>IDESourceControlProjectName</key>
+	<string>onemoretest</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>2E1E89C8-A83E-4CD3-AFE4-AC5AB76D4BFD</key>
+		<string>https://github.com/obviousjim/ofxOculusRift.git</string>
+		<key>392F505E-7AF6-4A62-B744-FE1B63BF3245</key>
+		<string>https://github.com/obviousjim/ofxOculusRift.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>onemoretest/onemoretest.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>2E1E89C8-A83E-4CD3-AFE4-AC5AB76D4BFD</key>
+		<string>../../../../../addons/ofxOculusRift</string>
+		<key>392F505E-7AF6-4A62-B744-FE1B63BF3245</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/obviousjim/ofxOculusRift.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>392F505E-7AF6-4A62-B744-FE1B63BF3245</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>2E1E89C8-A83E-4CD3-AFE4-AC5AB76D4BFD</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ofxOculusRift</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>392F505E-7AF6-4A62-B744-FE1B63BF3245</string>
+			<key>IDESourceControlWCCName</key>
+			<string>thesis</string>
+		</dict>
+	</array>
+</dict>
+</plist>
