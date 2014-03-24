@@ -35,7 +35,7 @@ class testApp : public ofBaseApp{
     ofxKinect kinect;
     ofxOculusRift oculusRift;
     ofLight light;
-    ofEasyCam cam;
+    ofCamera cam;
     ofVec3f camPos;
     
     bool bThresWithOpenCv;
@@ -45,6 +45,9 @@ class testApp : public ofBaseApp{
     int farThreshold;
     
     int angle;
+    int b = 1;
+    int *a = &b;
+    
     
 		
 };
