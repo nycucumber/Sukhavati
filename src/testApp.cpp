@@ -6,10 +6,8 @@ void testApp::setup(){
     ofBackground(0, 0, 0);
     camPos.set(ofVec3f(1152,1572,0));
     cam.lookAt(ofVec3f(0,400,200));
-
     ofToggleFullscreen();
     ofSetLogLevel(OF_LOG_VERBOSE);
-    
     //kinect code-----
     kinect.setRegistration();
     kinect.init();
@@ -21,26 +19,18 @@ void testApp::setup(){
     
     angle = 0;
     kinect.setCameraTiltAngle(angle);
-
-    
-    //oculus code----
+    //set oculus rift camera to our ofcam
     oculusRift.baseCamera = &cam;
     oculusRift.setup();
-    //Don't we need to draw stuff while camera is actived?
     cam.begin();
+    //Don't we need to draw stuff while camera is actived?
     cam.end();
-    
-    
-    
     }
 
 //--------------------------------------------------------------
 void testApp::update(){
     
-    ofBackground(0, 0, 0);
-    
-    
-
+    ofBackground(0);
     oculusRift.baseCamera = &cam;
     if(oculusRift.isSetup()){
         ofRectangle viewport  = oculusRift.getOculusViewport();
@@ -93,10 +83,8 @@ void testApp::drawScene()
         
     //////////PUSH MATRIX//////////////
 		ofPushMatrix();
-        
         //Don't know what is this...
 		oculusRift.multBillboardMatrix();
-		ofSetColor(255, 0, 0);
         //Draw Room
         ofNoFill();
         ofDrawBox(0, ofGetHeight()/2, -800, 2400,2400,4000 );
@@ -107,12 +95,15 @@ void testApp::drawScene()
         ofLine(0, 0, 0, 0,800,0);
         ofSetColor(0, 0, 255);
         ofLine(0, 0, 0, 0, 0, 800);
+        ofPopStyle();
         //DRAW THE 1ST KINECT IMAGE
-        ofSetColor(255);
+        ofSetColor(255,255,255);
         drawPointCloud();
+        ofPopStyle();
         //DRAW THE 2ND KINECT IMAGE
         ofSetColor(255, 0, 0);
         drawAnotherPointCloud();
+        ofPopStyle();
 		ofPopMatrix();
         
     //////////POP MATRIX//////////////
@@ -166,7 +157,7 @@ void testApp::drawAnotherPointCloud() {
 	int h = 480;
 	ofMesh mesh2;
 	mesh2.setMode(OF_PRIMITIVE_POINTS);
-	int step = 2;
+	int step = 10;
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
 			if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1200) {
@@ -180,7 +171,7 @@ void testApp::drawAnotherPointCloud() {
 
 	ofPushMatrix();
     ofScale(-1, -1, 1);
-	ofTranslate(48, -214   , -1550); // center the points a bit
+	ofTranslate(48, -214, -1550); // center the points a bit
 	ofEnableDepthTest();
 	mesh2.drawVertices();
 	ofDisableDepthTest();
