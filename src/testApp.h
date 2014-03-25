@@ -1,5 +1,10 @@
 #pragma once
 
+
+
+// uncomment this to read from two kinects simultaneously
+#define USE_TWO_KINECTS
+
 #include "ofMain.h"
 #include "ofxKinect.h"
 #include "ofxOpenCv.h"
@@ -29,8 +34,16 @@ class testApp : public ofBaseApp{
     //draw the point cloud
      void drawPointCloud();
     
+    
     //kincet
     void closeKinect();
+    
+    
+#ifdef USE_TWO_KINECTS
+	ofxKinect kinect2;
+     void drawAnotherPointCloud();
+#endif
+    
     
     ofxKinect kinect;
     ofxOculusRift oculusRift;
