@@ -3,12 +3,29 @@
 //--------------------------------------------------------------
 void testApp::setup(){
     
+    //general
     ofBackground(0, 0, 0);
-    camPos.set(ofVec3f(1152,1572,0));
-    cam.lookAt(ofVec3f(0,400,200));
+    ofSetVerticalSync(true);
     ofToggleFullscreen();
     ofSetLogLevel(OF_LOG_VERBOSE);
-    //kinect code-----
+    ofEnableSmoothing();
+    
+    // turn on smooth lighting
+    ofSetSmoothLighting(true);
+    lightPos.set(ofVec3f(0,0,0));
+    ambientLight.setPosition(lightPos);
+    
+    //camera
+    camPos.set(ofVec3f(1152,1572,0));
+    cam.lookAt(ofVec3f(0,400,200));
+    cam.begin();
+    cam.end();//Don't we need to draw stuff while camera is actived?
+   
+    //3d model
+    roomModel.loadModel("room.3ds");
+    roomModel.setPosition(0, 0, 0);
+    
+    //kinect
     kinect.setRegistration();
     kinect.init();
     kinect.open();
@@ -16,15 +33,16 @@ void testApp::setup(){
     kinect2.init();
     kinect2.open();
 #endif
-    
     angle = 0;
     kinect.setCameraTiltAngle(angle);
-    //set oculus rift camera to our ofcam
+    
+    //osculus rift
     oculusRift.baseCamera = &cam;
     oculusRift.setup();
-    cam.begin();
-    //Don't we need to draw stuff while camera is actived?
-    cam.end();
+    
+    //text
+    zero.loadFont("Helvetica.dfont", 20);
+    
     }
 
 //--------------------------------------------------------------
@@ -46,7 +64,8 @@ void testApp::update(){
 //--------------------------------------------------------------
 void testApp::draw(){
     
-    
+    ofSetColor(255);
+    zero.drawString("0,0", 0, 0);
     
     if(oculusRift.isSetup()){
         ofSetColor(255, 255, 255);
@@ -59,6 +78,15 @@ void testApp::draw(){
 		oculusRift.endRightEye();
 		oculusRift.draw();
 		glDisable(GL_DEPTH_TEST);//ANYBODY TELL ME WHAT DOES THIS DO?
+        
+        //////////PUSH MATRIX//////////////
+        ofPushMatrix();
+        ofScale(10, 10);
+        roomModel.draw();
+        ofPopMatrix();
+        //////////POP MATRIX//////////////
+
+        
     }
 	else{
 		cam.begin();
@@ -131,16 +159,15 @@ void testApp::drawPointCloud(){
 			}
 		}
 	}
+    
+    
 	glPointSize(1);
     //////////PUSH MATRIX//////////////
-
 	ofPushMatrix();
 	// the projected points are 'upside down' and 'backwards'
 	ofScale(1, -1, -1);
 	ofTranslate(-100, -400, -100); // center the points a bit
-
 	ofEnableDepthTest();
-    
 	mesh.drawVertices();
 	ofDisableDepthTest();
 	ofPopMatrix();
@@ -161,17 +188,16 @@ void testApp::drawAnotherPointCloud() {
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
 			if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1200) {
-				//mesh2.addColor(kinect2.getColorAt(x,y));
+				mesh2.addColor(kinect2.getColorAt(x,y));
 				mesh2.addVertex(kinect2.getWorldCoordinateAt(x, y));
 			}
 		}
 	}
 	glPointSize(1);
     //////////PUSH MATRIX//////////////
-
 	ofPushMatrix();
     ofScale(-1, -1, 1);
-	ofTranslate(48, -214, -1550); // center the points a bit
+	ofTranslate(48, -214, -1550);
 	ofEnableDepthTest();
 	mesh2.drawVertices();
 	ofDisableDepthTest();
@@ -198,48 +224,40 @@ void testApp::closeKinect(){
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     
+    int step = 500;
+    
     switch (key) {
-        case OF_KEY_DOWN:
-            angle--;
-            if(angle<-30)angle=-30;
-            kinect.setCameraTiltAngle(angle);
-            break;
             
-        case OF_KEY_UP:
+        case 'n':
+            angle--;
+           if(angle<-30)angle=-30;
+            kinect.setCameraTiltAngle(angle);
+           break;
+        case 'm':
             angle++;
             if(angle>30)angle=30;
             kinect.setCameraTiltAngle(angle);
             break;
             
+        //modify camera position by x,y,z key
         case 'x':
-            camPos += ofVec3f(20,0,0);
-            ofLog()<<"camera's position is: "<<cam.getPosition();
-            
+           camPos += ofVec3f(step,0,0);
         case 'X':
-            camPos += ofVec3f(-20,0,0);
-            ofLog()<<"camera's position is: "<<cam.getPosition();
-            
-            
+            camPos += ofVec3f(-step,0,0);
         case 'y':
-            camPos -= ofVec3f(0,20,0);
-              ofLog()<<"camera's position is: "<<cam.getPosition();
-            
+            camPos += ofVec3f(0,step,0);
         case 'Y':
-            camPos -= ofVec3f(0,-20,0);
-            ofLog()<<"camera's position is: "<<cam.getPosition();
-            
+            camPos += ofVec3f(0,-step,0);
         case 'z':
-            camPos -= ofVec3f(0,0,20);
-              ofLog()<<"camera's position is: "<<cam.getPosition();
+           camPos += ofVec3f(0,0,step);
         case 'Z':
-            camPos += ofVec3f(0,0,-20);
-              ofLog()<<"camera's position is: "<<cam.getPosition();
-        
-          
-            
+           camPos += ofVec3f(0,0,-step);
     }
     
+  
     
+    
+     ofLog()<<"cam pos: "<<cam.getPosition();
 
 }
 

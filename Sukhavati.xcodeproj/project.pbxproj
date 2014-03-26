@@ -11,6 +11,9 @@
 		1D5F3298C2FA073628012944 /* ofxCvContourFinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C76DE5C29BDBD2CAA1DD0021 /* ofxCvContourFinder.cpp */; };
 		250A95BA26587BE85DB0A353 /* ofxCvColorImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE9C7160245B19131DAE6128 /* ofxCvColorImage.cpp */; };
 		255A7B680DC81E543C875794 /* usb_libusb10.c in Sources */ = {isa = PBXBuildFile; fileRef = 28F9707464BA3FF98E05096C /* usb_libusb10.c */; };
+		2FC6EDD318E2339F001AFEBF /* model3DS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6EDCB18E2339F001AFEBF /* model3DS.cpp */; };
+		2FC6EDD418E2339F001AFEBF /* texture3DS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6EDCD18E2339F001AFEBF /* texture3DS.cpp */; };
+		2FC6EDD518E2339F001AFEBF /* ofx3dModelLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6EDD118E2339F001AFEBF /* ofx3dModelLoader.cpp */; };
 		49BEEB2DFA5319D55AA6899F /* tilt.c in Sources */ = {isa = PBXBuildFile; fileRef = BF2F2AA872288D30F53983EF /* tilt.c */; };
 		63020F16C7E8DED980111241 /* ofxCvImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6151136D101F857DAE12722 /* ofxCvImage.cpp */; };
 		686B0DF6249B52E1A85B39EC /* ofxKinect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7ED9FFC7D08DA194C2CE7D09 /* ofxKinect.cpp */; };
@@ -87,6 +90,14 @@
 		241AAF7769D555E4ECD57E17 /* cameras.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cameras.h; path = ../../../addons/ofxKinect/libs/libfreenect/src/cameras.h; sourceTree = SOURCE_ROOT; };
 		28F9707464BA3FF98E05096C /* usb_libusb10.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 30; name = usb_libusb10.c; path = ../../../addons/ofxKinect/libs/libfreenect/src/usb_libusb10.c; sourceTree = SOURCE_ROOT; };
 		2E411F99E3AB7154484B4F96 /* kmeans_index.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = kmeans_index.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/flann/kmeans_index.h; sourceTree = SOURCE_ROOT; };
+		2FC6EDCB18E2339F001AFEBF /* model3DS.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = model3DS.cpp; sourceTree = "<group>"; };
+		2FC6EDCC18E2339F001AFEBF /* model3DS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = model3DS.h; sourceTree = "<group>"; };
+		2FC6EDCD18E2339F001AFEBF /* texture3DS.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = texture3DS.cpp; sourceTree = "<group>"; };
+		2FC6EDCE18E2339F001AFEBF /* texture3DS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = texture3DS.h; sourceTree = "<group>"; };
+		2FC6EDCF18E2339F001AFEBF /* Vector3DS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector3DS.h; sourceTree = "<group>"; };
+		2FC6EDD018E2339F001AFEBF /* ofx3DBaseLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ofx3DBaseLoader.h; sourceTree = "<group>"; };
+		2FC6EDD118E2339F001AFEBF /* ofx3dModelLoader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ofx3dModelLoader.cpp; sourceTree = "<group>"; };
+		2FC6EDD218E2339F001AFEBF /* ofx3DModelLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ofx3DModelLoader.h; sourceTree = "<group>"; };
 		30884ECD9C171AB1B1BDFC3F /* cv.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cv.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cv.hpp; sourceTree = SOURCE_ROOT; };
 		319268D200F1BA567E4CCFF9 /* cxeigen.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cxeigen.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cxeigen.hpp; sourceTree = SOURCE_ROOT; };
 		33FF03222909C1A0ECE43753 /* cv.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cv.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cv.h; sourceTree = SOURCE_ROOT; };
@@ -352,6 +363,38 @@
 			name = "libusb-1.0";
 			sourceTree = "<group>";
 		};
+		2FC6EDC818E2339F001AFEBF /* ofx3DModelLoader */ = {
+			isa = PBXGroup;
+			children = (
+				2FC6EDC918E2339F001AFEBF /* src */,
+			);
+			name = ofx3DModelLoader;
+			sourceTree = "<group>";
+		};
+		2FC6EDC918E2339F001AFEBF /* src */ = {
+			isa = PBXGroup;
+			children = (
+				2FC6EDCA18E2339F001AFEBF /* 3DS */,
+				2FC6EDD018E2339F001AFEBF /* ofx3DBaseLoader.h */,
+				2FC6EDD118E2339F001AFEBF /* ofx3dModelLoader.cpp */,
+				2FC6EDD218E2339F001AFEBF /* ofx3DModelLoader.h */,
+			);
+			name = src;
+			path = ../../../addons/ofx3DModelLoader/src;
+			sourceTree = "<group>";
+		};
+		2FC6EDCA18E2339F001AFEBF /* 3DS */ = {
+			isa = PBXGroup;
+			children = (
+				2FC6EDCB18E2339F001AFEBF /* model3DS.cpp */,
+				2FC6EDCC18E2339F001AFEBF /* model3DS.h */,
+				2FC6EDCD18E2339F001AFEBF /* texture3DS.cpp */,
+				2FC6EDCE18E2339F001AFEBF /* texture3DS.h */,
+				2FC6EDCF18E2339F001AFEBF /* Vector3DS.h */,
+			);
+			path = 3DS;
+			sourceTree = "<group>";
+		};
 		32687044708CDA9EDA265387 /* libfreenect */ = {
 			isa = PBXGroup;
 			children = (
@@ -508,6 +551,7 @@
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				2FC6EDC818E2339F001AFEBF /* ofx3DModelLoader */,
 				9683228C705CA3FF4F2EA945 /* ofxKinect */,
 				A0B90D3B0ADB9C1716816714 /* ofxOpenCv */,
 				DCD46EAAB39931819E40F820 /* ofxOculusRift */,
@@ -791,6 +835,7 @@
 				ACE7DC9A3223ED5EE1B80074 /* cameras.c in Sources */,
 				F4135EEFC911E9ED211FB6F9 /* core.c in Sources */,
 				D31F5C1B140C59B2AF1533A8 /* registration.c in Sources */,
+				2FC6EDD518E2339F001AFEBF /* ofx3dModelLoader.cpp in Sources */,
 				49BEEB2DFA5319D55AA6899F /* tilt.c in Sources */,
 				255A7B680DC81E543C875794 /* usb_libusb10.c in Sources */,
 				250A95BA26587BE85DB0A353 /* ofxCvColorImage.cpp in Sources */,
@@ -799,8 +844,10 @@
 				FB09C6B2A1DA0EA217240CB8 /* ofxCvGrayscaleImage.cpp in Sources */,
 				E212C821D1064B92DD953A42 /* ofxCvHaarFinder.cpp in Sources */,
 				63020F16C7E8DED980111241 /* ofxCvImage.cpp in Sources */,
+				2FC6EDD418E2339F001AFEBF /* texture3DS.cpp in Sources */,
 				D3301F6A0B43BB293ED97C1D /* ofxCvShortImage.cpp in Sources */,
 				E265AB18747CABBD0826BAC4 /* ofxOculusRift.cpp in Sources */,
+				2FC6EDD318E2339F001AFEBF /* model3DS.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

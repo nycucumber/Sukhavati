@@ -1,14 +1,14 @@
 #pragma once
 
-
-
-// uncomment this to read from two kinects simultaneously
 #define USE_TWO_KINECTS
 
 #include "ofMain.h"
 #include "ofxKinect.h"
 #include "ofxOpenCv.h"
 #include "ofxOculusRift.h"
+#include "ofx3DModelLoader.h"
+
+
 
 class testApp : public ofBaseApp{
 
@@ -16,13 +16,7 @@ class testApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
-    
-    //scene for oculus rift
-    void drawScene();
-
-   
-    
-		void keyPressed(int key);
+        void keyPressed(int key);
 		void keyReleased(int key);
 		void mouseMoved(int x, int y );
 		void mouseDragged(int x, int y, int button);
@@ -31,36 +25,32 @@ class testApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
-    //draw the point cloud
-     void drawPointCloud();
     
     
-    //kincet
-    void closeKinect();
-    
+        void drawPointCloud();
+        void closeKinect();
+        void drawScene();
     
 #ifdef USE_TWO_KINECTS
 	ofxKinect kinect2;
-     void drawAnotherPointCloud();
+    void drawAnotherPointCloud();
 #endif
     
-    
     ofxKinect kinect;
+    int angle;
     ofxOculusRift oculusRift;
-    ofLight light;
     ofCamera cam;
     ofVec3f camPos;
+    ofx3DModelLoader roomModel;
+    //lights setting
+    ofLight ambientLight;
+    ofVec3f lightPos, lightDirection;
+    ofColor lightColor;
+    //texts
+    ofTrueTypeFont zero;
     
-    bool bThresWithOpenCv;
-    bool bDrawPointCloud;
-    
-    int nearThreshold;
-    int farThreshold;
-    
-    int angle;
-    int b = 1;
-    int *a = &b;
+
     
     
-		
+   
 };
