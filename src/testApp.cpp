@@ -4,7 +4,7 @@
 void testApp::setup(){
     
     //general
-    //ofBackground(0, 0, 0);
+    ofBackground(0, 0, 0);
     ofSetVerticalSync(true);
     ofToggleFullscreen();
     ofSetLogLevel(OF_LOG_VERBOSE);
@@ -12,21 +12,17 @@ void testApp::setup(){
     
     // turn on smooth lighting
     ofSetSmoothLighting(true);
+    pointLight.setPointLight();
     lightPos.set(ofVec3f(0,0,0));
-    ambientLight.setPosition(lightPos);
-    
-    //camera
-    
-    cam.setPosition(ofVec3f(0,-1000,0));
-    //cam.lookAt(ofVec3f(0,1,0), ofVec3f(0,1,0));
-    
-    cam.begin();
-    cam.end();//Don't we need to draw stuff while camera is actived?
+    pointLight.setPosition(lightPos);
+    //light
+    pointLight.setPointLight();
     
     
     //3d model
     roomModel.loadModel("room.3ds");
     roomModel.setPosition(0, 0, 0);
+    roomModel.setScale(45, 45, 45);
     
     //kinect
     kinect.setRegistration();
@@ -51,12 +47,12 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
-    
-    ofBackground(0);
+    pointLight.setPosition(0, 0, 1500);
+    cam.setPosition(0, 0, 1200);
+  
     if(oculusRift.isSetup()){
         ofRectangle viewport  = oculusRift.getOculusViewport();
     }
-    
     kinect.update();
 #ifdef USE_TWO_KINECTS
     kinect2.update();
@@ -66,13 +62,15 @@ void testApp::update(){
 
 //--------------------------------------------------------------
 void testApp::draw(){
-    ambientLight.enable();
+    
     
     ofSetColor(255, 255, 255);
     glEnable(GL_DEPTH_TEST);
+    
     oculusRift.beginLeftEye();
     drawScene();
     oculusRift.endLeftEye();
+    
     oculusRift.beginRightEye();
     drawScene();
     oculusRift.endRightEye();
@@ -80,13 +78,6 @@ void testApp::draw(){
     oculusRift.draw();
     glDisable(GL_DEPTH_TEST);//ANYBODY TELL ME WHAT DOES THIS DO?
     
-    //////////PUSH MATRIX//////////////
-    ofPushMatrix();
-    ofScale(10, 10);
-    roomModel.draw();
-    ofPopMatrix();
-    //////////POP MATRIX//////////////
-    ambientLight.disable();
     
     
 }
@@ -95,39 +86,39 @@ void testApp::draw(){
 void testApp::drawScene()
 {
 	
-    //	ofPushMatrix();
-    //	ofRotate(90, 0, 0, -1);
-    //	ofDrawGridPlane(500.0f, 10.0f, false );
-    //	ofPopMatrix();
-    //
-	    if(oculusRift.isSetup()){
+   	    if(oculusRift.isSetup()){
        
         //////////PUSH MATRIX//////////////
 		ofPushMatrix();
+            pointLight.enable();
         //Don't know what is this...
 		oculusRift.multBillboardMatrix();
-        //Draw Room
-        ofNoFill();
-        ofDrawBox(0, 0, -800, 2400,3000,4000 );
         //coordinate
-        ofSetColor(255, 0, 0);
-        ofLine(0, 0, 0, 800, 0,0);
-        ofSetColor(0, 255, 0);
-        ofLine(0, 0, 0, 0,800,0);
-        ofSetColor(0, 0, 255);
-        ofLine(0, 0, 0, 0, 0, 800);
-        ofPopStyle();
-        ofSetColor(255);
+            ofSetColor(255, 0, 0);
+            ofLine(0, 0, 0, 3000, 0,0);
+            ofSetColor(0, 255, 0);
+            ofLine(0, 0, 0, 0,3000,0);
+            ofSetColor(0, 0, 255);
+            ofLine(0, 0, 0, 0, 0, 3000);
         zero.drawString("0,0,0", 0, 0);
         ofDrawGrid();
         //DRAW THE 1ST KINECT IMAGE
-        ofSetColor(255,255,255);
+       
         drawPointCloud();
-        ofPopStyle();
+
+            
+        ofPushMatrix();
+        ofSetColor(255,255,255);
+        roomModel.draw();
+        ofPopMatrix();
+
+#ifdef USE_TWO_KINECTS
         //DRAW THE 2ND KINECT IMAGE
-        ofSetColor(255, 0, 0);
+      
         drawAnotherPointCloud();
-        ofPopStyle();
+            
+#endif
+            pointLight.disable();
 		ofPopMatrix();
         //////////POP MATRIX//////////////
         
@@ -158,12 +149,15 @@ void testApp::drawPointCloud(){
 	glPointSize(1);
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
+    ofPushStyle();
 	// the projected points are 'upside down' and 'backwards'
 	ofScale(1, -1, -1);
-	ofTranslate(-100, -400, -100); // center the points a bit
+	ofTranslate(0, 0, 900); // center the points a bit
 	ofEnableDepthTest();
+    ofSetColor(150, 150, 150);
 	mesh.drawVertices();
 	ofDisableDepthTest();
+    ofPopStyle();
 	ofPopMatrix();
     //////////PUSH MATRIX//////////////
     
@@ -190,11 +184,14 @@ void testApp::drawAnotherPointCloud() {
 	glPointSize(1);
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
+    ofPushStyle();
     ofScale(-1, -1, 1);
-	ofTranslate(48, -214, -1550);
+	ofTranslate(0, 0, 900);
 	ofEnableDepthTest();
+    ofSetColor(255, 0, 0);
 	mesh2.drawVertices();
 	ofDisableDepthTest();
+    ofPopStyle();
 	ofPopMatrix();
     //////////PUSH MATRIX//////////////
     

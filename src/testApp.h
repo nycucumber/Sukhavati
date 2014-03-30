@@ -43,7 +43,7 @@ class testApp : public ofBaseApp{
     ofVec3f camPos;
     ofx3DModelLoader roomModel;
     //lights setting
-    ofLight ambientLight;
+    ofLight pointLight;
     ofVec3f lightPos, lightDirection;
     ofColor lightColor;
     //texts
