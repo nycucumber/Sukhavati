@@ -39,12 +39,12 @@ class testApp : public ofBaseApp{
     ofxKinect kinect;
     int angle;
     ofxOculusRift oculusRift;
-    ofCamera cam;
+    ofEasyCam cam;
     ofVec3f camPos;
     ofx3DModelLoader roomModel;
     //lights setting
     ofLight pointLight;
-    ofVec3f lightPos, lightDirection;
+    ofVec3f lightPos, lightDirection, roomModelPos, pointCloudPos;
     ofColor lightColor;
     //texts
     ofTrueTypeFont zero;

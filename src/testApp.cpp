@@ -6,23 +6,22 @@ void testApp::setup(){
     //general
     ofBackground(0, 0, 0);
     ofSetVerticalSync(true);
-    ofToggleFullscreen();
+    
     ofSetLogLevel(OF_LOG_VERBOSE);
     ofEnableSmoothing();
     
-    // turn on smooth lighting
+    //lights
     ofSetSmoothLighting(true);
     pointLight.setPointLight();
-    lightPos.set(ofVec3f(0,0,0));
+    lightPos.set(ofVec3f(0,0,1500)); //point light position
     pointLight.setPosition(lightPos);
-    //light
     pointLight.setPointLight();
     
     
     //3d model
     roomModel.loadModel("room.3ds");
     roomModel.setPosition(0, 0, 0);
-    roomModel.setScale(45, 45, 45);
+    roomModel.setScale(50, 50, 50);
     
     //kinect
     kinect.setRegistration();
@@ -37,47 +36,54 @@ void testApp::setup(){
     
     //osculus rift
     oculusRift.baseCamera = &cam;
-    
+    cam.setDistance(500.f);
     oculusRift.setup();
-    
     //text
     zero.loadFont("Helvetica.dfont", 5);
+    ofToggleFullscreen();
+    cam.begin();
+    cam.end();
     
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-    pointLight.setPosition(0, 0, 1500);
-    cam.setPosition(0, 0, 1200);
-  
+    cout<<cam.getX()<<","<<cam.getY()<<","<<cam.getZ();
     if(oculusRift.isSetup()){
-        ofRectangle viewport  = oculusRift.getOculusViewport();
+        ofRectangle viewport  =  oculusRift.getOculusViewport();
     }
+    //update Kinects
     kinect.update();
 #ifdef USE_TWO_KINECTS
     kinect2.update();
 #endif
+    //ofLog() << "FarClip -> "<<cam.getFarClip()<< " Fov -> "  <<cam.getFov() << " NearClip -> " << cam.getNearClip();
     
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
     
-    
-    ofSetColor(255, 255, 255);
-    glEnable(GL_DEPTH_TEST);
-    
-    oculusRift.beginLeftEye();
-    drawScene();
-    oculusRift.endLeftEye();
-    
-    oculusRift.beginRightEye();
-    drawScene();
-    oculusRift.endRightEye();
-    
-    oculusRift.draw();
-    glDisable(GL_DEPTH_TEST);//ANYBODY TELL ME WHAT DOES THIS DO?
-    
+    if(oculusRift.isSetup()){
+        
+        
+        ofSetColor(255, 255, 255);
+        glEnable(GL_DEPTH_TEST);
+        oculusRift.beginLeftEye();
+        drawScene();
+        oculusRift.endLeftEye();
+        
+        oculusRift.beginRightEye();
+        drawScene();
+        oculusRift.endRightEye();
+        
+        oculusRift.draw();
+        glDisable(GL_DEPTH_TEST);//ANYBODY TELL ME WHAT DOES THIS DO?
+        
+        
+    }else{
+        cout<<"oculus rift not connected";
+    }
     
     
 }
@@ -86,45 +92,38 @@ void testApp::draw(){
 void testApp::drawScene()
 {
 	
-   	    if(oculusRift.isSetup()){
-       
-        //////////PUSH MATRIX//////////////
-		ofPushMatrix();
-            pointLight.enable();
-        //Don't know what is this...
-		oculusRift.multBillboardMatrix();
-        //coordinate
-            ofSetColor(255, 0, 0);
-            ofLine(0, 0, 0, 3000, 0,0);
-            ofSetColor(0, 255, 0);
-            ofLine(0, 0, 0, 0,3000,0);
-            ofSetColor(0, 0, 255);
-            ofLine(0, 0, 0, 0, 0, 3000);
-        zero.drawString("0,0,0", 0, 0);
-        ofDrawGrid();
-        //DRAW THE 1ST KINECT IMAGE
-       
-        drawPointCloud();
-
-            
-        ofPushMatrix();
-        ofSetColor(255,255,255);
-        roomModel.draw();
-        ofPopMatrix();
-
+    
+    
+    
+    ofPushStyle();
+    pointLight.enable();
+    //Don't know what is this...
+    oculusRift.multBillboardMatrix();
+    
+    
+    //DRAW THE 1ST KINECT IMAGE
+    ofPushMatrix();
+    drawPointCloud();
 #ifdef USE_TWO_KINECTS
-        //DRAW THE 2ND KINECT IMAGE
-      
-        drawAnotherPointCloud();
-            
+    //DRAW THE 2ND KINECT IMAGE
+    drawAnotherPointCloud();
 #endif
-            pointLight.disable();
-		ofPopMatrix();
-        //////////POP MATRIX//////////////
-        
-        }
-	
-	
+    ofPopMatrix();
+    
+    //Draw 3D Room
+    ofPushMatrix();
+    ofSetColor(255, 255, 255);
+    ofRotateX(270);
+    ofTranslate(0,0,-1000);
+    roomModel.draw();
+    ofPopMatrix();
+    
+
+    pointLight.disable();
+    ofPopStyle();
+    
+    
+    
     
 }
 
@@ -140,21 +139,20 @@ void testApp::drawPointCloud(){
 			if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
 				//mesh.addColor(kinect.getColorAt(x,y));
 				mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
-                
+                if(x == 10 && y == 0){
+                    ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+                }
 			}
 		}
 	}
-    
     
 	glPointSize(1);
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
     ofPushStyle();
 	// the projected points are 'upside down' and 'backwards'
-	ofScale(1, -1, -1);
-	ofTranslate(0, 0, 900); // center the points a bit
 	ofEnableDepthTest();
-    ofSetColor(150, 150, 150);
+    ofSetColor(255);
 	mesh.drawVertices();
 	ofDisableDepthTest();
     ofPopStyle();
@@ -185,8 +183,7 @@ void testApp::drawAnotherPointCloud() {
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
     ofPushStyle();
-    ofScale(-1, -1, 1);
-	ofTranslate(0, 0, 900);
+
 	ofEnableDepthTest();
     ofSetColor(255, 0, 0);
 	mesh2.drawVertices();
@@ -217,6 +214,7 @@ void testApp::keyPressed(int key){
     
     int step = 500;
     
+    
     switch (key) {
             
         case 'n':
@@ -244,10 +242,6 @@ void testApp::keyPressed(int key){
         case 'Z':
             camPos += ofVec3f(0,0,-step);
     }
-    
-    
-    
-    
     ofLog()<<"cam pos: "<<cam.getPosition();
     
 }
@@ -288,6 +282,6 @@ void testApp::gotMessage(ofMessage msg){
 }
 
 //--------------------------------------------------------------
-void testApp::dragEvent(ofDragInfo dragInfo){ 
+void testApp::dragEvent(ofDragInfo dragInfo){
     
 }
