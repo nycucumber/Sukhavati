@@ -48,9 +48,9 @@ class testApp : public ofBaseApp{
     ofColor lightColor;
     //texts
     ofTrueTypeFont zero;
-    
-
-    
-    
+    ofBoxPrimitive Room;
+    float px,py,pz;
+    bool showRoom;
+    float kinectImageScale;
    
 };

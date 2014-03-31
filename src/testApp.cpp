@@ -7,58 +7,81 @@ void testApp::setup(){
     ofBackground(0, 0, 0);
     ofSetVerticalSync(true);
     
-    ofSetLogLevel(OF_LOG_VERBOSE);
     ofEnableSmoothing();
     
+
     //lights
     ofSetSmoothLighting(true);
     pointLight.setPointLight();
-    lightPos.set(ofVec3f(0,0,1500)); //point light position
+    lightPos.set(ofVec3f(0,0,400)); //point light position
     pointLight.setPosition(lightPos);
-    pointLight.setPointLight();
     
     
     //3d model
     roomModel.loadModel("room.3ds");
-    roomModel.setPosition(0, 0, 0);
     roomModel.setScale(50, 50, 50);
+    roomModelPos.set(-90,-270,-930);
+//    roomModelPos.set(0,0,0);
+
+    showRoom = true;
     
+
     //kinect
     kinect.setRegistration();
     kinect.init();
     kinect.open();
+    kinectImageScale = 0.3;
 #ifdef USE_TWO_KINECTS
     kinect2.init();
     kinect2.open();
 #endif
+    
+    
     angle = 0;
     kinect.setCameraTiltAngle(angle);
+    //point cloud translation values:
+    px = -100;
+    py = -510;
+    pz = 500;
     
     //osculus rift
     oculusRift.baseCamera = &cam;
-    cam.setDistance(500.f);
+    cam.setDistance(400.f);
     oculusRift.setup();
     //text
     zero.loadFont("Helvetica.dfont", 5);
-    ofToggleFullscreen();
     cam.begin();
     cam.end();
+    
+    
+    
+    
+    ofToggleFullscreen();
+
+    
+    
     
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-    cout<<cam.getX()<<","<<cam.getY()<<","<<cam.getZ();
+    
+    pointLight.setPosition(lightPos);
+    
+    pointCloudPos.set(px,py,pz);
+
+    
     if(oculusRift.isSetup()){
         ofRectangle viewport  =  oculusRift.getOculusViewport();
     }
+    
+    
     //update Kinects
     kinect.update();
 #ifdef USE_TWO_KINECTS
     kinect2.update();
 #endif
     //ofLog() << "FarClip -> "<<cam.getFarClip()<< " Fov -> "  <<cam.getFov() << " NearClip -> " << cam.getNearClip();
-    
 }
 
 //--------------------------------------------------------------
@@ -68,7 +91,6 @@ void testApp::draw(){
         
         
         ofSetColor(255, 255, 255);
-        glEnable(GL_DEPTH_TEST);
         oculusRift.beginLeftEye();
         drawScene();
         oculusRift.endLeftEye();
@@ -78,11 +100,11 @@ void testApp::draw(){
         oculusRift.endRightEye();
         
         oculusRift.draw();
-        glDisable(GL_DEPTH_TEST);//ANYBODY TELL ME WHAT DOES THIS DO?
-        
         
     }else{
-        cout<<"oculus rift not connected";
+        cam.begin();
+        drawScene();
+        cam.end();
     }
     
     
@@ -93,12 +115,15 @@ void testApp::drawScene()
 {
 	
     
-    
+    pointLight.enable();
     
     ofPushStyle();
-    pointLight.enable();
-    //Don't know what is this...
-    oculusRift.multBillboardMatrix();
+    
+    //pointLight.draw();
+    
+    
+    
+//    oculusRift.multBillboardMatrix();
     
     
     //DRAW THE 1ST KINECT IMAGE
@@ -110,20 +135,33 @@ void testApp::drawScene()
 #endif
     ofPopMatrix();
     
-    //Draw 3D Room
+    
+    if(showRoom){
+    ofEnableDepthTest();
+    //--------Draw 3D Room-------
     ofPushMatrix();
     ofSetColor(255, 255, 255);
     ofRotateX(270);
-    ofTranslate(0,0,-1000);
+    ofTranslate(roomModelPos);
     roomModel.draw();
     ofPopMatrix();
+    //--------Draw 3D Room-------
+    }
     
-
-    pointLight.disable();
+//    
+//    //our geo. room
+//    ofPushMatrix();
+//    ofSetColor(255, 255, 255);
+//    ofTranslate(roomModelPos);
+//    ofNoFill();
+//    Room.draw();
+//    Room.drawWireframe();
+//    ofPopMatrix();
+//    
+    
+    
     ofPopStyle();
-    
-    
-    
+    pointLight.disable();
     
 }
 
@@ -139,20 +177,24 @@ void testApp::drawPointCloud(){
 			if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
 				//mesh.addColor(kinect.getColorAt(x,y));
 				mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
-                if(x == 10 && y == 0){
-                    ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
-                }
+                  //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
 			}
 		}
 	}
     
-	glPointSize(1);
+    
+    
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
     ofPushStyle();
-	// the projected points are 'upside down' and 'backwards'
+    glPointSize(1);
+    ofTranslate(pointCloudPos);
 	ofEnableDepthTest();
-    ofSetColor(255);
+    ofSetColor(0,0,0);
+    ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
+    ofRotateY(90);
+    ofRotateZ(90);
+    ofRotateX(90);
 	mesh.drawVertices();
 	ofDisableDepthTest();
     ofPopStyle();
@@ -183,9 +225,10 @@ void testApp::drawAnotherPointCloud() {
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
     ofPushStyle();
-
 	ofEnableDepthTest();
+    ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
     ofSetColor(255, 0, 0);
+    ofTranslate(pointCloudPos);
 	mesh2.drawVertices();
 	ofDisableDepthTest();
     ofPopStyle();
@@ -212,8 +255,8 @@ void testApp::closeKinect(){
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     
-    int step = 500;
-    
+    float step = 30;
+    ofVec3f *lightpos = &lightPos;
     
     switch (key) {
             
@@ -230,19 +273,89 @@ void testApp::keyPressed(int key){
             
             //modify camera position by x,y,z key
         case 'x':
-            camPos += ofVec3f(step,0,0);
+            //            *lightpos -= ofVec3f(-step,0,0);
+            roomModelPos  += ofVec3f(step, 0,0);
+            break;
         case 'X':
-            camPos += ofVec3f(-step,0,0);
+            //            *lightpos += ofVec3f(-step,0,0);
+            roomModelPos += ofVec3f(-step,0,0);
+            break;
         case 'y':
-            camPos += ofVec3f(0,step,0);
+            //            *lightpos += ofVec3f(0,step,0);
+            roomModelPos += ofVec3f(0,step,0);
+            break;
+            
         case 'Y':
-            camPos += ofVec3f(0,-step,0);
+            //            *lightpos += ofVec3f(0,-step,0);
+            roomModelPos += ofVec3f(0,-step,0);
+            break;
+            
         case 'z':
-            camPos += ofVec3f(0,0,step);
+            //            *lightpos += ofVec3f(0,0,step);
+            roomModelPos += ofVec3f(0,0,step);
+            break;
+            
         case 'Z':
-            camPos += ofVec3f(0,0,-step);
+            //            *lightpos += ofVec3f(0,0,-step);
+            roomModelPos += ofVec3f(0,0,-step);
+            break;
+            
+        case 'r':
+            cout <<" the ROOM's position is:  " <<  roomModelPos << endl;
+            break;
+            
+        case 'l':
+            cout << " the Light's position is:  " << lightPos << endl;
+            break;
+            
+        case 'p':
+            pz+=10;
+            cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
+            break;
+            
+            
+        case 'P':
+            pz-=10;
+            cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
+            break;
+            
+        case 'o':
+            py+=10;
+            cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
+            break;
+            
+        case 'O':
+            py-=10;
+            cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
+            break;
+            
+        case '[':
+            px-=10;
+            cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
+            break;
+            
+        case ']':
+            px+=10;
+            cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
+            break;
+            
+
+            
+
+            
+            
+        case 'b':
+            showRoom = !showRoom;
+            break;
+            
+            
+            
+            
     }
-    ofLog()<<"cam pos: "<<cam.getPosition();
+    
+    
+    
+    
     
 }
 
