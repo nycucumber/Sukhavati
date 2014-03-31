@@ -52,5 +52,10 @@ class testApp : public ofBaseApp{
     float px,py,pz;
     bool showRoom;
     float kinectImageScale;
+    float timeStampA;
+    float timeStampB;
+    float timeDifference;
+    
+    bool loseCalmness;
    
 };

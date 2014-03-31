@@ -48,15 +48,19 @@ void testApp::setup(){
     oculusRift.baseCamera = &cam;
     cam.setDistance(400.f);
     oculusRift.setup();
+    
+    
     //text
     zero.loadFont("Helvetica.dfont", 5);
     cam.begin();
     cam.end();
     
+    //breath stats
+    loseCalmness = false;
+    timeStampA=0;
+    timeStampB=0;
     
-    
-    
-    ofToggleFullscreen();
+    //ofToggleFullscreen();
 
     
     
@@ -70,6 +74,20 @@ void testApp::update(){
     
     pointCloudPos.set(px,py,pz);
 
+   //timer
+    if (loseCalmness) {
+        timeStampB=ofGetElapsedTimef();
+        timeDifference = timeStampB-timeStampA;
+        
+        cout<<timeDifference<<"|||" <<loseCalmness <<endl;
+        if(timeDifference>5){
+            loseCalmness = false;
+        }
+        
+}
+    
+    
+    
     
     if(oculusRift.isSetup()){
         ofRectangle viewport  =  oculusRift.getOculusViewport();
@@ -170,17 +188,30 @@ void testApp::drawPointCloud(){
     int w = 640;
 	int h = 480;
 	ofMesh mesh;
-	mesh.setMode(OF_PRIMITIVE_POINTS);
-	int step = 10;
-	for(int y = 0; y < h; y += step) {
-		for(int x = 0; x < w; x += step) {
-			if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
-				//mesh.addColor(kinect.getColorAt(x,y));
-				mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
-                  //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
-			}
-		}
-	}
+	mesh.setMode(OF_PRIMITIVE_LINE_LOOP);
+    if(loseCalmness==false){
+        int step = 10;
+        for(int y = 0; y < h; y += step) {
+            for(int x = 0; x < w; x += step) {
+                if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
+                    //mesh.addColor(kinect.getColorAt(x,y));
+                    mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
+                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+                }
+            }
+        }
+    }else{
+        int step = 10;
+        for(int y = 0; y < h; y += step) {
+            for(int x = 0; x < w; x += step) {
+                if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
+                    //mesh.addColor(kinect.getColorAt(x,y));
+                    mesh.addVertex(kinect.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
+                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+                }
+            }
+        }
+    }
     
     
     
@@ -201,10 +232,9 @@ void testApp::drawPointCloud(){
 	ofPopMatrix();
     //////////PUSH MATRIX//////////////
     
-    
-    
-    
 }
+
+
 
 #ifdef USE_TWO_KINECTS
 void testApp::drawAnotherPointCloud() {
@@ -265,6 +295,7 @@ void testApp::keyPressed(int key){
             if(angle<-30)angle=-30;
             kinect.setCameraTiltAngle(angle);
             break;
+            
         case 'm':
             angle++;
             if(angle>30)angle=30;
@@ -339,17 +370,15 @@ void testApp::keyPressed(int key){
             cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
             break;
             
-
-            
-
-            
-            
         case 'b':
             showRoom = !showRoom;
             break;
             
             
-            
+        case 'q':
+            loseCalmness = true;
+            timeStampA=ofGetElapsedTimef();
+            break;
             
     }
     
