@@ -8,10 +8,21 @@ void testApp::setup(){
     ofSetVerticalSync(true);
     
     ofEnableSmoothing();
-    xangle = 165;
-    yangle = 88;
-    zangle = -9;
     
+    
+    //kinect one image rotate parameters
+    xangle = 179;
+    yangle = 86;
+    zangle = 0;
+    //kinect two image rotate parameters
+    x2angle = 457;
+    y2angle = 181;
+    z2angle = -3;
+
+    
+    
+    
+       
     
     //roomRotate
     roomRotateX=270;
@@ -49,8 +60,12 @@ void testApp::setup(){
     kinect.setCameraTiltAngle(angle);
     //point cloud translation values:
     px = -160;
-    py = -470;
-    pz = 270;
+    py = -530;
+    pz = 280;
+    
+    p2x = -320;
+    p2y = -510;
+    p2z = 290;
     
     //osculus rift
     oculusRift.baseCamera = &cam;
@@ -68,7 +83,7 @@ void testApp::setup(){
     timeStampA=0;
     timeStampB=0;
     
-    //ofToggleFullscreen();
+    ofToggleFullscreen();
     
     
     
@@ -83,6 +98,8 @@ void testApp::update(){
     pointLight.setPosition(lightPos);
     
     pointCloudPos.set(px,py,pz);
+    
+    anotherPointCloudPos.set(p2x,p2y,p2z);
     
     //timer
     if (loseCalmness) {
@@ -288,12 +305,13 @@ void testApp::drawAnotherPointCloud() {
     ofEnableDepthTest();
     
     glPointSize(1);
-    ofTranslate(pointCloudPos);
-    ofSetColor(0,0,0);
+    ofTranslate(anotherPointCloudPos);
+    ofSetColor(255,0,0);
     ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
-    ofRotateY(xangle);
-    ofRotateZ(yangle);
-    ofRotateX(zangle);
+   // ofScale(1,1,1);
+    ofRotateY(x2angle);
+    ofRotateZ(y2angle);
+    ofRotateX(z2angle);
 	mesh2.drawVertices();
 	ofDisableDepthTest();
     ofPopStyle();
@@ -337,7 +355,7 @@ void testApp::keyPressed(int key){
             kinect.setCameraTiltAngle(angle);
             break;
             
-            //modify camera position by x,y,z key
+/////////////////////////modify camera position by x,y,z key////////////////////////////////////////////////
         case 'x':
             //            *lightpos -= ofVec3f(-step,0,0);
             xangle +=1;
@@ -377,14 +395,49 @@ void testApp::keyPressed(int key){
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             break;
             
-        case 'r':
-            cout <<" the ROOM's position is:  " <<  roomModelPos << endl;
+/////////////////////////////////rotate kinect 2//////////////////////////////////////////////
+            
+            //modify camera position by x,y,z key
+        case 'j':
+            //            *lightpos -= ofVec3f(-step,0,0);
+            x2angle +=1;
+            cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
+            
+            break;
+        case 'J':
+            //            *lightpos += ofVec3f(-step,0,0);
+            x2angle-=1;
+            cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
+            
+            break;
+        case 'k':
+            //            *lightpos += ofVec3f(0,step,0);
+            y2angle+=1;
+            cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
+            
+            break;
+            
+        case 'K':
+            //            *lightpos += ofVec3f(0,-step,0);
+            y2angle-=1;
+            cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
+            
             break;
             
         case 'l':
-            cout << " the Light's position is:  " << lightPos << endl;
+            //            *lightpos += ofVec3f(0,0,step);
+            z2angle+=1;
+            cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
+            
             break;
             
+        case 'L':
+            //            *lightpos += ofVec3f(0,0,-step);
+            z2angle-=1;
+            cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
+            break;
+            
+        //////////KINECT ONE POSITION---------------
         case 'p':
             pz+=10;
             cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
@@ -416,16 +469,46 @@ void testApp::keyPressed(int key){
             cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
             break;
             
+        //////////////KINECT TWO position   ---------------
+        case 'f':
+            p2z+=10;
+            cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
+            
+        case 'F':
+            p2z-=10;
+            cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
+        case 'g':
+            p2y+=10;
+            cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
+        case 'G':
+            p2y-=10;
+            cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
+        case 'h':
+            p2x-=10;
+            cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
+        case 'H':
+            p2x+=10;
+            cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
         case 'b':
             showRoom = !showRoom;
             break;
-            
             
         case 'q':
             loseCalmness = true;
             timeStampA=ofGetElapsedTimef();
             break;
-            
     }
     
     

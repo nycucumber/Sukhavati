@@ -44,12 +44,12 @@ public:
     ofx3DModelLoader roomModel;
     //lights setting
     ofLight pointLight;
-    ofVec3f lightPos, lightDirection, roomModelPos, pointCloudPos;
+    ofVec3f lightPos, lightDirection, roomModelPos, pointCloudPos,anotherPointCloudPos;
     ofColor lightColor;
     //texts
     ofTrueTypeFont zero;
     ofBoxPrimitive Room;
-    float px,py,pz;
+    float px,py,pz,p2x,p2y,p2z;
     bool showRoom;
     float kinectImageScale;
     float timeStampA;
@@ -57,6 +57,8 @@ public:
     float timeDifference;
     
     float xangle,yangle,zangle;
+    float x2angle,y2angle,z2angle;
+
     float roomRotateX,roomRotateY,roomRotateZ;
     
     bool loseCalmness;
