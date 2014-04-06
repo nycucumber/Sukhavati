@@ -8,8 +8,16 @@ void testApp::setup(){
     ofSetVerticalSync(true);
     
     ofEnableSmoothing();
+    xangle = 165;
+    yangle = 88;
+    zangle = -9;
     
-
+    
+    //roomRotate
+    roomRotateX=270;
+    roomRotateY=0;
+    roomRotateZ=0;
+    
     //lights
     ofSetSmoothLighting(true);
     pointLight.setPointLight();
@@ -21,11 +29,11 @@ void testApp::setup(){
     roomModel.loadModel("room.3ds");
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
-//    roomModelPos.set(0,0,0);
-
+    //roomModelPos.set(0,0,0);
+    
     showRoom = true;
     
-
+    
     //kinect
     kinect.setRegistration();
     kinect.init();
@@ -40,9 +48,9 @@ void testApp::setup(){
     angle = 0;
     kinect.setCameraTiltAngle(angle);
     //point cloud translation values:
-    px = -100;
-    py = -510;
-    pz = 500;
+    px = -160;
+    py = -470;
+    pz = 270;
     
     //osculus rift
     oculusRift.baseCamera = &cam;
@@ -61,7 +69,7 @@ void testApp::setup(){
     timeStampB=0;
     
     //ofToggleFullscreen();
-
+    
     
     
     
@@ -70,11 +78,13 @@ void testApp::setup(){
 //--------------------------------------------------------------
 void testApp::update(){
     
+    
+    
     pointLight.setPosition(lightPos);
     
     pointCloudPos.set(px,py,pz);
-
-   //timer
+    
+    //timer
     if (loseCalmness) {
         timeStampB=ofGetElapsedTimef();
         timeDifference = timeStampB-timeStampA;
@@ -84,7 +94,7 @@ void testApp::update(){
             loseCalmness = false;
         }
         
-}
+    }
     
     
     
@@ -106,8 +116,6 @@ void testApp::update(){
 void testApp::draw(){
     
     if(oculusRift.isSetup()){
-        
-        
         ofSetColor(255, 255, 255);
         oculusRift.beginLeftEye();
         drawScene();
@@ -116,9 +124,7 @@ void testApp::draw(){
         oculusRift.beginRightEye();
         drawScene();
         oculusRift.endRightEye();
-        
         oculusRift.draw();
-        
     }else{
         cam.begin();
         drawScene();
@@ -141,41 +147,47 @@ void testApp::drawScene()
     
     
     
-//    oculusRift.multBillboardMatrix();
+    //oculusRift.multBillboardMatrix();
     
     
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
     drawPointCloud();
+    ofPopMatrix();
 #ifdef USE_TWO_KINECTS
     //DRAW THE 2ND KINECT IMAGE
+    ofPushMatrix();
+    
     drawAnotherPointCloud();
-#endif
     ofPopMatrix();
+    
+#endif
+    
     
     
     if(showRoom){
-    ofEnableDepthTest();
-    //--------Draw 3D Room-------
-    ofPushMatrix();
-    ofSetColor(255, 255, 255);
-    ofRotateX(270);
-    ofTranslate(roomModelPos);
-    roomModel.draw();
-    ofPopMatrix();
-    //--------Draw 3D Room-------
+        ofEnableDepthTest();
+        //--------Draw 3D Room-------
+        ofPushMatrix();
+        ofSetColor(255, 255, 255);
+        ofRotateX(270);
+        ofRotateY(roomRotateY);
+        ofTranslate(roomModelPos);
+        roomModel.draw();
+        ofPopMatrix();
+        //--------Draw 3D Room-------
     }
     
-//    
-//    //our geo. room
-//    ofPushMatrix();
-//    ofSetColor(255, 255, 255);
-//    ofTranslate(roomModelPos);
-//    ofNoFill();
-//    Room.draw();
-//    Room.drawWireframe();
-//    ofPopMatrix();
-//    
+    //
+    //    //our geo. room
+    //    ofPushMatrix();
+    //    ofSetColor(255, 255, 255);
+    //    ofTranslate(roomModelPos);
+    //    ofNoFill();
+    //    Room.draw();
+    //    Room.drawWireframe();
+    //    ofPopMatrix();
+    //
     
     
     ofPopStyle();
@@ -188,7 +200,8 @@ void testApp::drawPointCloud(){
     int w = 640;
 	int h = 480;
 	ofMesh mesh;
-	mesh.setMode(OF_PRIMITIVE_LINE_LOOP);
+    
+	mesh.setMode(OF_PRIMITIVE_POINTS);
     if(loseCalmness==false){
         int step = 10;
         for(int y = 0; y < h; y += step) {
@@ -223,9 +236,9 @@ void testApp::drawPointCloud(){
 	ofEnableDepthTest();
     ofSetColor(0,0,0);
     ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
-    ofRotateY(90);
-    ofRotateZ(90);
-    ofRotateX(90);
+    ofRotateY(yangle);
+    ofRotateZ(zangle);
+    ofRotateX(xangle);
 	mesh.drawVertices();
 	ofDisableDepthTest();
     ofPopStyle();
@@ -241,24 +254,46 @@ void testApp::drawAnotherPointCloud() {
 	int w = 640;
 	int h = 480;
 	ofMesh mesh2;
-	mesh2.setMode(OF_PRIMITIVE_POINTS);
-	int step = 10;
-	for(int y = 0; y < h; y += step) {
-		for(int x = 0; x < w; x += step) {
-			if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1200) {
-				//mesh2.addColor(kinect2.getColorAt(x,y));
-				mesh2.addVertex(kinect2.getWorldCoordinateAt(x, y));
-			}
-		}
-	}
-	glPointSize(1);
+    mesh2.setMode(OF_PRIMITIVE_POINTS);
+    if(loseCalmness==false){
+        int step = 10;
+        for(int y = 0; y < h; y += step) {
+            for(int x = 0; x < w; x += step) {
+                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1300) {
+                    //mesh.addColor(kinect.getColorAt(x,y));
+                    mesh2.addVertex(kinect2.getWorldCoordinateAt(x, y));
+                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+                }
+            }
+        }
+    }
+    //    else{
+    //        int step = 10;
+    //        for(int y = 0; y < h; y += step) {
+    //            for(int x = 0; x < w; x += step) {
+    //                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1300) {
+    //                    //mesh.addColor(kinect.getColorAt(x,y));
+    //                    mesh2.addVertex(kinect2.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
+    //                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+    //                }
+    //            }
+    //        }
+    //    }
+    
+    
+    
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
     ofPushStyle();
-	ofEnableDepthTest();
-    ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
-    ofSetColor(255, 0, 0);
+    ofEnableDepthTest();
+    
+    glPointSize(1);
     ofTranslate(pointCloudPos);
+    ofSetColor(0,0,0);
+    ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
+    ofRotateY(xangle);
+    ofRotateZ(yangle);
+    ofRotateX(zangle);
 	mesh2.drawVertices();
 	ofDisableDepthTest();
     ofPopStyle();
@@ -305,30 +340,41 @@ void testApp::keyPressed(int key){
             //modify camera position by x,y,z key
         case 'x':
             //            *lightpos -= ofVec3f(-step,0,0);
-            roomModelPos  += ofVec3f(step, 0,0);
+            xangle +=1;
+            cout<<xangle<<","<<yangle<<","<<zangle<<endl;
+            
             break;
         case 'X':
             //            *lightpos += ofVec3f(-step,0,0);
-            roomModelPos += ofVec3f(-step,0,0);
+            xangle-=1;
+            cout<<xangle<<","<<yangle<<","<<zangle<<endl;
+            
             break;
         case 'y':
             //            *lightpos += ofVec3f(0,step,0);
-            roomModelPos += ofVec3f(0,step,0);
+            yangle+=1;
+            cout<<xangle<<","<<yangle<<","<<zangle<<endl;
+            
             break;
             
         case 'Y':
             //            *lightpos += ofVec3f(0,-step,0);
-            roomModelPos += ofVec3f(0,-step,0);
+            yangle-=1;
+            cout<<xangle<<","<<yangle<<","<<zangle<<endl;
+            
             break;
             
         case 'z':
             //            *lightpos += ofVec3f(0,0,step);
-            roomModelPos += ofVec3f(0,0,step);
+            zangle+=1;
+            cout<<xangle<<","<<yangle<<","<<zangle<<endl;
+            
             break;
             
         case 'Z':
             //            *lightpos += ofVec3f(0,0,-step);
-            roomModelPos += ofVec3f(0,0,-step);
+            zangle-=1;
+            cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             break;
             
         case 'r':
