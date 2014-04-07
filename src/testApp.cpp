@@ -5,10 +5,8 @@ void testApp::setup(){
     
     //general
     ofBackground(0, 0, 0);
-    ofSetVerticalSync(true);
-    
+    //ofSetVerticalSync(true);
     ofEnableSmoothing();
-    
     
     //kinect one image rotate parameters
     xangle = 179;
@@ -18,11 +16,6 @@ void testApp::setup(){
     x2angle = 457;
     y2angle = 181;
     z2angle = -3;
-
-    
-    
-    
-       
     
     //roomRotate
     roomRotateX=270;
@@ -55,9 +48,6 @@ void testApp::setup(){
     kinect2.open();
 #endif
     
-    
-    angle = 0;
-    kinect.setCameraTiltAngle(angle);
     //point cloud translation values:
     px = -160;
     py = -530;
@@ -83,7 +73,7 @@ void testApp::setup(){
     timeStampA=0;
     timeStampB=0;
     
-    ofToggleFullscreen();
+   // ofToggleFullscreen();
     
     
     
@@ -94,18 +84,17 @@ void testApp::setup(){
 void testApp::update(){
     
     
-    
+    //light position
     pointLight.setPosition(lightPos);
-    
+    //kinect #one position
     pointCloudPos.set(px,py,pz);
-    
+    //kinect #two position
     anotherPointCloudPos.set(p2x,p2y,p2z);
     
     //timer
     if (loseCalmness) {
         timeStampB=ofGetElapsedTimef();
         timeDifference = timeStampB-timeStampA;
-        
         cout<<timeDifference<<"|||" <<loseCalmness <<endl;
         if(timeDifference>5){
             loseCalmness = false;
@@ -126,7 +115,6 @@ void testApp::update(){
 #ifdef USE_TWO_KINECTS
     kinect2.update();
 #endif
-    //ofLog() << "FarClip -> "<<cam.getFarClip()<< " Fov -> "  <<cam.getFov() << " NearClip -> " << cam.getNearClip();
 }
 
 //--------------------------------------------------------------
@@ -159,13 +147,7 @@ void testApp::drawScene()
     pointLight.enable();
     
     ofPushStyle();
-    
-    //pointLight.draw();
-    
-    
-    
-    //oculusRift.multBillboardMatrix();
-    
+    pointLight.draw();
     
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
@@ -174,7 +156,6 @@ void testApp::drawScene()
 #ifdef USE_TWO_KINECTS
     //DRAW THE 2ND KINECT IMAGE
     ofPushMatrix();
-    
     drawAnotherPointCloud();
     ofPopMatrix();
     
@@ -192,20 +173,7 @@ void testApp::drawScene()
         ofTranslate(roomModelPos);
         roomModel.draw();
         ofPopMatrix();
-        //--------Draw 3D Room-------
     }
-    
-    //
-    //    //our geo. room
-    //    ofPushMatrix();
-    //    ofSetColor(255, 255, 255);
-    //    ofTranslate(roomModelPos);
-    //    ofNoFill();
-    //    Room.draw();
-    //    Room.drawWireframe();
-    //    ofPopMatrix();
-    //
-    
     
     ofPopStyle();
     pointLight.disable();
@@ -230,6 +198,7 @@ void testApp::drawPointCloud(){
                 }
             }
         }
+    //mess particles around
     }else{
         int step = 10;
         for(int y = 0; y < h; y += step) {
@@ -284,18 +253,18 @@ void testApp::drawAnotherPointCloud() {
             }
         }
     }
-    //    else{
-    //        int step = 10;
-    //        for(int y = 0; y < h; y += step) {
-    //            for(int x = 0; x < w; x += step) {
-    //                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1300) {
-    //                    //mesh.addColor(kinect.getColorAt(x,y));
-    //                    mesh2.addVertex(kinect2.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
-    //                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
-    //                }
-    //            }
-    //        }
-    //    }
+    else{
+        int step = 10;
+        for(int y = 0; y < h; y += step) {
+            for(int x = 0; x < w; x += step) {
+                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1300) {
+                    //mesh.addColor(kinect.getColorAt(x,y));
+                    mesh2.addVertex(kinect2.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
+                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+                }
+            }
+        }
+    }
     
     
     
@@ -308,7 +277,6 @@ void testApp::drawAnotherPointCloud() {
     ofTranslate(anotherPointCloudPos);
     ofSetColor(255,0,0);
     ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
-   // ofScale(1,1,1);
     ofRotateY(x2angle);
     ofRotateZ(y2angle);
     ofRotateX(z2angle);
