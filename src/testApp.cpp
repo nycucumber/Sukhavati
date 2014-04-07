@@ -33,8 +33,6 @@ void testApp::setup(){
     roomModel.loadModel("room.3ds");
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
-    //roomModelPos.set(0,0,0);
-    
     showRoom = true;
     
     
@@ -75,6 +73,10 @@ void testApp::setup(){
     
    // ofToggleFullscreen();
     
+    //Serial Communication
+    serial.listDevices();
+    serial.setup();
+    
     
     
     
@@ -82,6 +84,11 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
+    
+    if(serial.available()>0){
+        analogRead = serial.readByte();
+        cout<< "serial input data -> " <<analogRead<<endl;
+    }
     
     
     //light position

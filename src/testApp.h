@@ -36,6 +36,10 @@ public:
     void drawAnotherPointCloud();
 #endif
     
+    
+    ofSerial serial;
+    
+    
     ofxKinect kinect;
     int angle;
     ofxOculusRift oculusRift;
@@ -55,12 +59,14 @@ public:
     float timeStampA;
     float timeStampB;
     float timeDifference;
-    
+    float analogRead;
     float xangle,yangle,zangle;
     float x2angle,y2angle,z2angle;
 
     float roomRotateX,roomRotateY,roomRotateZ;
     
     bool loseCalmness;
+    
+ 
     
 };
