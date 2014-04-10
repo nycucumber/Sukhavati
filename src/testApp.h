@@ -1,16 +1,19 @@
 #pragma once
 
-#define USE_TWO_KINECTS
+//#define USE_TWO_KINECTS
 
 #include "ofMain.h"
 #include "ofxKinect.h"
 #include "ofxOpenCv.h"
 #include "ofxOculusRift.h"
 #include "ofx3DModelLoader.h"
+#include "ofxUI.h"
+
 
 
 
 class testApp : public ofBaseApp{
+
     
 public:
     void setup();
@@ -66,7 +69,11 @@ public:
     float roomRotateX,roomRotateY,roomRotateZ;
     
     bool loseCalmness;
+
+    //UI
+    ofxUICanvas * gui;
+    void exitUI();
+    void guiEvent(ofxUIEventArgs &e);
     
- 
     
 };

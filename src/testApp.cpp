@@ -7,7 +7,6 @@ void testApp::setup(){
     ofBackground(0, 0, 0);
     //ofSetVerticalSync(true);
     ofEnableSmoothing();
-    
     //kinect one image rotate parameters
     xangle = 179;
     yangle = 86;
@@ -24,14 +23,15 @@ void testApp::setup(){
     
     //lights
     ofSetSmoothLighting(true);
-    pointLight.setPointLight();
+   // pointLight.setPointLight();
     lightPos.set(ofVec3f(0,0,400)); //point light position
     pointLight.setPosition(lightPos);
     
     
     //3d model
-    roomModel.loadModel("room.3ds");
+    roomModel.loadModel("bakedRoom.3ds");
     roomModel.setScale(50, 50, 50);
+    //roomModel.setScale(400,400,400);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
     
@@ -50,6 +50,7 @@ void testApp::setup(){
     px = -160;
     py = -530;
     pz = 280;
+
     
     p2x = -320;
     p2y = -510;
@@ -76,6 +77,17 @@ void testApp::setup(){
     //Serial Communication
     serial.listDevices();
     serial.setup();
+    
+    //GUI
+    gui = new ofxUICanvas();
+    gui->addSlider("BACKGROUND",0.0,255.0,100.0);
+    gui->addToggle("FULLSCREEN", false);
+    gui->addSlider("X_POSITION_OF_CLOUD_ONE", -300, 300, -160);
+
+    gui->autoSizeToFitWidgets();
+  
+    ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
+//    gui->loadSettings("settings.xml");
     
     
     
@@ -154,7 +166,7 @@ void testApp::drawScene()
     pointLight.enable();
     
     ofPushStyle();
-    pointLight.draw();
+   // pointLight.draw();
     
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
@@ -199,7 +211,7 @@ void testApp::drawPointCloud(){
         for(int y = 0; y < h; y += step) {
             for(int x = 0; x < w; x += step) {
                 if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
-                    //mesh.addColor(kinect.getColorAt(x,y));
+                    mesh.addColor(kinect.getColorAt(x,y));
                     mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
                     //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
                 }
@@ -227,7 +239,7 @@ void testApp::drawPointCloud(){
     glPointSize(1);
     ofTranslate(pointCloudPos);
 	ofEnableDepthTest();
-    ofSetColor(0,0,0);
+    //ofSetColor(0,0,0);
     ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
     ofRotateY(yangle);
     ofRotateZ(zangle);
@@ -308,8 +320,39 @@ void testApp::closeKinect(){
 	kinect2.close();
 #endif
     
+ 
+    
     
 }
+
+void testApp::exitUI(){
+    gui->saveSettings("settings.xml");
+    delete gui;
+    
+}
+
+void testApp::guiEvent(ofxUIEventArgs &e)
+{
+    
+    if(e.getName() == "BACKGROUND")
+    {
+        ofxUISlider *slider = e.getSlider();
+        ofBackground(slider->getScaledValue());
+    }
+    else if(e.getName() == "FULLSCREEN")
+    {
+        ofxUIToggle *toggle = e.getToggle();
+        ofSetFullscreen(toggle->getValue());
+        
+    }else if(e.getName() == "X_POSITION_OF_CLOUD_ONE" ){
+        ofxUISlider *slider = e.getSlider();
+        px = slider->getScaledValue();
+    }
+    
+    
+    
+}
+
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     
