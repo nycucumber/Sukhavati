@@ -29,8 +29,8 @@ void testApp::setup(){
     
     
     //3d model
-    roomModel.loadModel("bakedRoom.3ds");
-    roomModel.setScale(50, 50, 50);
+    roomModel.loadModel("APR14.3ds");
+     roomModel.setScale(50, 50, 50);
     //roomModel.setScale(400,400,400);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
@@ -55,6 +55,8 @@ void testApp::setup(){
     p2x = -320;
     p2y = -510;
     p2z = 290;
+    
+    
     
     //osculus rift
     oculusRift.baseCamera = &cam;
@@ -89,13 +91,34 @@ void testApp::setup(){
     ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
 //    gui->loadSettings("settings.xml");
     
-    
+    //particle system
+//    noise = false;
+//    TimeToDoLastRead = false;
+//    body2_set = false;
+//    p_returning = false;
+//    setVV = false;
+//    acceleration_set=false;
+//    releaseTime = 10;
+//    timer = 0;
+//    maxSpeed = 1;
+//    maxforce = 0.2;
+//    randomSpeed = 0.3;
+
     
     
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
+//    
+//    
+//    if (noise) { //only execute when particles got released
+//        
+//        tsB = ofGetElapsedTimef();
+//        timer = tsB - tsA;
+//        
+//    }
+    
     
     if(serial.available()>0){
         analogRead = serial.readByte();
@@ -111,15 +134,15 @@ void testApp::update(){
     anotherPointCloudPos.set(p2x,p2y,p2z);
     
     //timer
-    if (loseCalmness) {
-        timeStampB=ofGetElapsedTimef();
-        timeDifference = timeStampB-timeStampA;
-        cout<<timeDifference<<"|||" <<loseCalmness <<endl;
-        if(timeDifference>5){
-            loseCalmness = false;
-        }
-        
-    }
+//    if (loseCalmness) {
+//        timeStampB=ofGetElapsedTimef();
+//        timeDifference = timeStampB-timeStampA;
+//        cout<<timeDifference<<"|||" <<loseCalmness <<endl;
+//        if(timeDifference>5){
+//            loseCalmness = false;
+//        }
+//        
+//    }
     
     
     
@@ -201,12 +224,129 @@ void testApp::drawScene()
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
+    
+    
+    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
+
+    
+    
+
+//    
+//    //get mesh data from kinect per frame---------------------
+//    if(!noise){
+//        for ( int y=0;y < h; y++){
+//            for(int x=0; x < w; x++){
+//                if(kinect.getDistanceAt(x, y)>0 && kinect.getDistanceAt(x, y)<1500){
+//                    body.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+//                    if (setVV==false) {
+//                        velocity.push_back(ofVec3f(ofRandom(-randomSpeed,randomSpeed), ofRandom(-randomSpeed,randomSpeed),ofRandom(randomSpeed,randomSpeed)));
+//                    }
+//                    
+//                }
+//            }
+//        }
+//        if(velocity.size()!=0){
+//            setVV = true;
+//          //  cout<<"velocity is "<<velocity[0]<<endl;
+//            
+//        }
+//    }
+//    
+//    
+//    //if we pressed key, read data from kinect one more time then set TimeToDoLastRead to false---------------------
+//    
+//    if(noise && TimeToDoLastRead){
+//        body.clear();
+//        for ( int y=0;y < h; y++){
+//            for(int x=0; x < w; x++){
+//                if(kinect.getDistanceAt(x, y)>0 && kinect.getDistanceAt(x, y)<1500){
+//                    body.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+//                }
+//            }
+//        }
+//        TimeToDoLastRead = false;
+//        tsA = ofGetElapsedTimef();        //get the time when we TimeToDoLastRead everthing and kick off the animation
+//        
+//    }
+//    
+    
+    
+    
+//    
+//    //if we pressed key, move every vertex in "body" ------------------------------------
+//    
+//    if(noise && TimeToDoLastRead == false){
+//        
+//        if(timer >= releaseTime && p_returning == false){
+//            //GET REAL-TIME KINECT IMAGE, GET DATA STORING INTO "BODY2"
+//            for ( int y=0;y < h; y++){
+//                for(int x=0; x < w; x++){
+//                    if(kinect.getDistanceAt(x, y)>0 && kinect.getDistanceAt(x, y)<1500){
+//                        body2.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+//                    }
+//                }
+//            }
+//            p_returning = true; //kick off our animation
+//            timer = 0;//reset timer
+//            tsA = ofGetElapsedTimef();//time stamp A
+//        }
+//        
+//        
+//        //if 'particle returning' is true, move towards our targets
+//        if (p_returning == true) {
+//            
+//            for(int i=0;i<body.size();i++){
+//                ofVec3f desired;
+//                ofVec3f steer;
+//                desired = body2[i]-body[i];
+//                desired.normalize();
+//                desired * maxSpeed;
+//                steer = desired-velocity[i];
+//                steer.limit(maxforce);
+//                acceleration.push_back(steer);
+//                velocity[i] = velocity[i]+acceleration[i];
+//                body[i]+=velocity[i];
+//                
+//            }
+//        }
+//        
+//        //RESET STATE ACCORDING BY TIMER>=3
+//        if(timer >= releaseTime && p_returning == true){
+//            velocity.clear();
+//            velocity.push_back(ofVec3f(ofRandom(-randomSpeed,randomSpeed), ofRandom(-randomSpeed,randomSpeed),ofRandom(randomSpeed,randomSpeed)));
+//            
+//            p_returning = false;
+//            
+//            timer = 0;
+//            tsA = ofGetElapsedTimef();
+//        }
+//        
+//        
+//        
+//        //if 'particle returning' is false, move randomly
+//        if(p_returning == false){
+//            for(int i=0;i<body.size();i++) {
+//                body[i]=body[i]+velocity[i];
+//            }
+//        }
+//        
+//    }
+//    
+//    
+//    //apply all of the positions information into our mesh  ----------------------------
+//    for(int i=0;i<body.size();i++){
+//        kmesh.addVertex(body[i]);
+//    }
+//
+//    kmesh.setMode(OF_PRIMITIVE_POINTS);
+
+    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
     int w = 640;
 	int h = 480;
 	ofMesh mesh;
     
 	mesh.setMode(OF_PRIMITIVE_POINTS);
-    if(loseCalmness==false){
+//    if(loseCalmness==false){
         int step = 10;
         for(int y = 0; y < h; y += step) {
             for(int x = 0; x < w; x += step) {
@@ -217,26 +357,27 @@ void testApp::drawPointCloud(){
                 }
             }
         }
-    //mess particles around
-    }else{
-        int step = 10;
-        for(int y = 0; y < h; y += step) {
-            for(int x = 0; x < w; x += step) {
-                if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
-                    //mesh.addColor(kinect.getColorAt(x,y));
-                    mesh.addVertex(kinect.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
-                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
-                }
-            }
-        }
-    }
+//    //mess particles around
+//    }else{
+//        int step = 10;
+//        for(int y = 0; y < h; y += step) {
+//            for(int x = 0; x < w; x += step) {
+//                if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
+//                    //mesh.addColor(kinect.getColorAt(x,y));
+//                    mesh.addVertex(kinect.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
+//                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+//                }
+//            }
+//        }
+//    }
     
     
     
     //////////PUSH MATRIX//////////////
 	ofPushMatrix();
     ofPushStyle();
-    glPointSize(1);
+    ofSetColor(0, 0, 0);
+    glPointSize(0.5);
     ofTranslate(pointCloudPos);
 	ofEnableDepthTest();
     //ofSetColor(0,0,0);
@@ -244,11 +385,25 @@ void testApp::drawPointCloud(){
     ofRotateY(yangle);
     ofRotateZ(zangle);
     ofRotateX(xangle);
-	mesh.drawVertices();
+	mesh.drawVertices();  //kmesh <-> mesh
 	ofDisableDepthTest();
     ofPopStyle();
 	ofPopMatrix();
     //////////PUSH MATRIX//////////////
+    
+    
+    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
+
+//    if(!noise){
+//        body.clear();
+//    }
+//    
+//    acceleration.clear();
+//    body2.clear();
+ //   cout<<"----------------------"<<endl;
+    
+    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
+
     
 }
 
@@ -264,7 +419,7 @@ void testApp::drawAnotherPointCloud() {
         int step = 10;
         for(int y = 0; y < h; y += step) {
             for(int x = 0; x < w; x += step) {
-                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1300) {
+                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1500) {
                     //mesh.addColor(kinect.getColorAt(x,y));
                     mesh2.addVertex(kinect2.getWorldCoordinateAt(x, y));
                     //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
@@ -276,7 +431,7 @@ void testApp::drawAnotherPointCloud() {
         int step = 10;
         for(int y = 0; y < h; y += step) {
             for(int x = 0; x < w; x += step) {
-                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1300) {
+                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1500) {
                     //mesh.addColor(kinect.getColorAt(x,y));
                     mesh2.addVertex(kinect2.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
                     //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
@@ -333,6 +488,7 @@ void testApp::exitUI(){
 
 void testApp::guiEvent(ofxUIEventArgs &e)
 {
+    
     
     if(e.getName() == "BACKGROUND")
     {
@@ -527,6 +683,13 @@ void testApp::keyPressed(int key){
             loseCalmness = true;
             timeStampA=ofGetElapsedTimef();
             break;
+            
+//        case '/':
+//            noise = !noise;
+//            TimeToDoLastRead = true;
+//            timer = 0;
+//            break;
+
     }
     
     

@@ -76,4 +76,26 @@ public:
     void guiEvent(ofxUIEventArgs &e);
     
     
+    //particle system
+//    vector<ofVec3f> body;
+//    vector<ofVec3f> body2;
+//    vector<ofVec3f> velocity;
+//    vector<ofVec3f> desired;
+//    vector<ofVec3f> steer;
+//    vector<ofVec3f> acceleration;
+//    float timer;
+//    float tsA;
+//    float tsB;
+//    float maxSpeed;
+//    float maxforce;
+//    float releaseTime;
+//    float randomSpeed;
+//    bool noise;
+//    bool TimeToDoLastRead;
+//    bool body2_set;
+//    bool acceleration_set;
+//    bool p_returning;
+//    bool setVV;
+
+    
 };
