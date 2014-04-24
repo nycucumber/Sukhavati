@@ -1,6 +1,6 @@
 #pragma once
 
-//#define USE_TWO_KINECTS
+#define USE_TWO_KINECTS
 
 #include "ofMain.h"
 #include "ofxKinect.h"
@@ -8,6 +8,12 @@
 #include "ofxOculusRift.h"
 #include "ofx3DModelLoader.h"
 #include "ofxUI.h"
+#include "ofxOsc.h"
+#include "particle.h"
+#include "target.h"
+
+#define PORT 4444
+#define NUM_MSG_STRINGS 20
 
 
 
@@ -38,12 +44,10 @@ public:
 	ofxKinect kinect2;
     void drawAnotherPointCloud();
 #endif
-    
-    
     ofSerial serial;
-    
-    
+    //kinect
     ofxKinect kinect;
+    //oculus rift
     int angle;
     ofxOculusRift oculusRift;
     ofEasyCam cam;
@@ -59,43 +63,26 @@ public:
     float px,py,pz,p2x,p2y,p2z;
     bool showRoom;
     float kinectImageScale;
-    float timeStampA;
-    float timeStampB;
-    float timeDifference;
     float analogRead;
     float xangle,yangle,zangle;
     float x2angle,y2angle,z2angle;
 
     float roomRotateX,roomRotateY,roomRotateZ;
-    
-    bool loseCalmness;
+
 
     //UI
     ofxUICanvas * gui;
     void exitUI();
     void guiEvent(ofxUIEventArgs &e);
     
-    
     //particle system
-//    vector<ofVec3f> body;
-//    vector<ofVec3f> body2;
-//    vector<ofVec3f> velocity;
-//    vector<ofVec3f> desired;
-//    vector<ofVec3f> steer;
-//    vector<ofVec3f> acceleration;
-//    float timer;
-//    float tsA;
-//    float tsB;
-//    float maxSpeed;
-//    float maxforce;
-//    float releaseTime;
-//    float randomSpeed;
-//    bool noise;
-//    bool TimeToDoLastRead;
-//    bool body2_set;
-//    bool acceleration_set;
-//    bool p_returning;
-//    bool setVV;
-
+    vector<particle> ps;
+    vector<particle> ps2;
+    bool firstRun2;
+    bool firstRun;
+    float meditationLevel;
+    //OSC
+    ofxOscReceiver receiver;
+    
     
 };

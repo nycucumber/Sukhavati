@@ -4,8 +4,8 @@
 void testApp::setup(){
     
     //general
-    ofBackground(0, 0, 0);
-    //ofSetVerticalSync(true);
+    ofBackground(255, 255, 255);
+    ofSetFrameRate(30);
     ofEnableSmoothing();
     //kinect one image rotate parameters
     xangle = 179;
@@ -29,7 +29,7 @@ void testApp::setup(){
     
     
     //3d model
-    roomModel.loadModel("APR14.3ds");
+    roomModel.loadModel("noneRoom.3ds");
      roomModel.setScale(50, 50, 50);
     //roomModel.setScale(400,400,400);
     roomModelPos.set(-90,-270,-930);
@@ -68,11 +68,7 @@ void testApp::setup(){
     zero.loadFont("Helvetica.dfont", 5);
     cam.begin();
     cam.end();
-    
-    //breath stats
-    loseCalmness = false;
-    timeStampA=0;
-    timeStampB=0;
+
     
    // ofToggleFullscreen();
     
@@ -82,43 +78,38 @@ void testApp::setup(){
     
     //GUI
     gui = new ofxUICanvas();
-    gui->addSlider("BACKGROUND",0.0,255.0,100.0);
+    gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addToggle("FULLSCREEN", false);
-    gui->addSlider("X_POSITION_OF_CLOUD_ONE", -300, 300, -160);
 
     gui->autoSizeToFitWidgets();
   
     ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
-//    gui->loadSettings("settings.xml");
+    
+    //osc
+    meditationLevel = 100;
+    receiver.setup(PORT);
     
     //particle system
-//    noise = false;
-//    TimeToDoLastRead = false;
-//    body2_set = false;
-//    p_returning = false;
-//    setVV = false;
-//    acceleration_set=false;
-//    releaseTime = 10;
-//    timer = 0;
-//    maxSpeed = 1;
-//    maxforce = 0.2;
-//    randomSpeed = 0.3;
-
     
     
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-//    
-//    
-//    if (noise) { //only execute when particles got released
-//        
-//        tsB = ofGetElapsedTimef();
-//        timer = tsB - tsA;
-//        
-//    }
+
     
+    //osc:
+    while (receiver.hasWaitingMessages()) {
+        ofxOscMessage m;
+        receiver.getNextMessage(&m);
+        if (m.getAddress() == "/meditation") {
+            // cout<<m.getArgAsFloat(0)<<endl;
+            meditationLevel = ofMap(m.getArgAsFloat(0), 0, 100, 0, 120);
+            cout<<meditationLevel<<endl;
+        }
+    }
+    
+    //serial
     
     if(serial.available()>0){
         analogRead = serial.readByte();
@@ -132,20 +123,6 @@ void testApp::update(){
     pointCloudPos.set(px,py,pz);
     //kinect #two position
     anotherPointCloudPos.set(p2x,p2y,p2z);
-    
-    //timer
-//    if (loseCalmness) {
-//        timeStampB=ofGetElapsedTimef();
-//        timeDifference = timeStampB-timeStampA;
-//        cout<<timeDifference<<"|||" <<loseCalmness <<endl;
-//        if(timeDifference>5){
-//            loseCalmness = false;
-//        }
-//        
-//    }
-    
-    
-    
     
     if(oculusRift.isSetup()){
         ofRectangle viewport  =  oculusRift.getOculusViewport();
@@ -186,10 +163,9 @@ void testApp::drawScene()
 {
 	
     
-    pointLight.enable();
+   // pointLight.enable();
     
     ofPushStyle();
-   // pointLight.draw();
     
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
@@ -218,192 +194,148 @@ void testApp::drawScene()
     }
     
     ofPopStyle();
-    pointLight.disable();
+   // pointLight.disable();
     
 }
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
-    
-    
-    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
-
-    
-    
-
-//    
-//    //get mesh data from kinect per frame---------------------
-//    if(!noise){
-//        for ( int y=0;y < h; y++){
-//            for(int x=0; x < w; x++){
-//                if(kinect.getDistanceAt(x, y)>0 && kinect.getDistanceAt(x, y)<1500){
-//                    body.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-//                    if (setVV==false) {
-//                        velocity.push_back(ofVec3f(ofRandom(-randomSpeed,randomSpeed), ofRandom(-randomSpeed,randomSpeed),ofRandom(randomSpeed,randomSpeed)));
-//                    }
-//                    
-//                }
-//            }
-//        }
-//        if(velocity.size()!=0){
-//            setVV = true;
-//          //  cout<<"velocity is "<<velocity[0]<<endl;
-//            
-//        }
-//    }
-//    
-//    
-//    //if we pressed key, read data from kinect one more time then set TimeToDoLastRead to false---------------------
-//    
-//    if(noise && TimeToDoLastRead){
-//        body.clear();
-//        for ( int y=0;y < h; y++){
-//            for(int x=0; x < w; x++){
-//                if(kinect.getDistanceAt(x, y)>0 && kinect.getDistanceAt(x, y)<1500){
-//                    body.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-//                }
-//            }
-//        }
-//        TimeToDoLastRead = false;
-//        tsA = ofGetElapsedTimef();        //get the time when we TimeToDoLastRead everthing and kick off the animation
-//        
-//    }
-//    
-    
-    
-    
-//    
-//    //if we pressed key, move every vertex in "body" ------------------------------------
-//    
-//    if(noise && TimeToDoLastRead == false){
-//        
-//        if(timer >= releaseTime && p_returning == false){
-//            //GET REAL-TIME KINECT IMAGE, GET DATA STORING INTO "BODY2"
-//            for ( int y=0;y < h; y++){
-//                for(int x=0; x < w; x++){
-//                    if(kinect.getDistanceAt(x, y)>0 && kinect.getDistanceAt(x, y)<1500){
-//                        body2.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-//                    }
-//                }
-//            }
-//            p_returning = true; //kick off our animation
-//            timer = 0;//reset timer
-//            tsA = ofGetElapsedTimef();//time stamp A
-//        }
-//        
-//        
-//        //if 'particle returning' is true, move towards our targets
-//        if (p_returning == true) {
-//            
-//            for(int i=0;i<body.size();i++){
-//                ofVec3f desired;
-//                ofVec3f steer;
-//                desired = body2[i]-body[i];
-//                desired.normalize();
-//                desired * maxSpeed;
-//                steer = desired-velocity[i];
-//                steer.limit(maxforce);
-//                acceleration.push_back(steer);
-//                velocity[i] = velocity[i]+acceleration[i];
-//                body[i]+=velocity[i];
-//                
-//            }
-//        }
-//        
-//        //RESET STATE ACCORDING BY TIMER>=3
-//        if(timer >= releaseTime && p_returning == true){
-//            velocity.clear();
-//            velocity.push_back(ofVec3f(ofRandom(-randomSpeed,randomSpeed), ofRandom(-randomSpeed,randomSpeed),ofRandom(randomSpeed,randomSpeed)));
-//            
-//            p_returning = false;
-//            
-//            timer = 0;
-//            tsA = ofGetElapsedTimef();
-//        }
-//        
-//        
-//        
-//        //if 'particle returning' is false, move randomly
-//        if(p_returning == false){
-//            for(int i=0;i<body.size();i++) {
-//                body[i]=body[i]+velocity[i];
-//            }
-//        }
-//        
-//    }
-//    
-//    
-//    //apply all of the positions information into our mesh  ----------------------------
-//    for(int i=0;i<body.size();i++){
-//        kmesh.addVertex(body[i]);
-//    }
-//
-//    kmesh.setMode(OF_PRIMITIVE_POINTS);
-
-    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
-    int w = 640;
-	int h = 480;
-	ofMesh mesh;
-    
-	mesh.setMode(OF_PRIMITIVE_POINTS);
-//    if(loseCalmness==false){
-        int step = 10;
-        for(int y = 0; y < h; y += step) {
-            for(int x = 0; x < w; x += step) {
-                if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
-                    mesh.addColor(kinect.getColorAt(x,y));
-                    mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
-                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+    if(kinect.isFrameNew()){
+     
+        
+        if(meditationLevel>=90){
+            ofMesh mesh;
+            ofMesh kinectData;
+            kinectData.setMode(OF_PRIMITIVE_POINTS);
+            mesh.setMode(OF_PRIMITIVE_POINTS);
+            int w = 640;
+            int h = 480;
+            int step = 9;
+            vector<target> targets;
+            for(int y=0;y<h;y+=step){
+                for(int x=0;x<w;x+=step){
+                    if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
+                        mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                    }
                 }
             }
-        }
-//    //mess particles around
-//    }else{
-//        int step = 10;
-//        for(int y = 0; y < h; y += step) {
-//            for(int x = 0; x < w; x += step) {
-//                if(kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x,y) < 1300) {
-//                    //mesh.addColor(kinect.getColorAt(x,y));
-//                    mesh.addVertex(kinect.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
-//                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
-//                }
-//            }
-//        }
-//    }
+            ofPushMatrix();
+            ofSetColor(0, 0, 0);
+            // ofScale(1,-1,1);
+            glPointSize(2);
+            ofTranslate(pointCloudPos);
+            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            ofRotateY(yangle);
+            ofRotateZ(zangle);
+            ofRotateX(xangle);
+            mesh.draw();
+            ofPopMatrix();
+        }else{
+            
+            ofMesh mesh;
+            ofMesh kinectData;
+            kinectData.setMode(OF_PRIMITIVE_POINTS);
+            mesh.setMode(OF_PRIMITIVE_POINTS);
+            int w = 640;
+            int h = 480;
+            int step = 9;
+            vector<target> targets;
+            for(int y=0;y<h;y+=step){
+                for(int x=0;x<w;x+=step){
+                    if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
+                        targets.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                        if(firstRun == false){
+                            ps.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                        }
+                        
+                    }
+                }
+            }
+            firstRun = true;
+            
+            
+            //compare the amount between our Particle Vector and all kinect particles
+            while(targets.size() > ps.size()){
+                ps.push_back(ofVec3f(ofRandom(-300,300), ofRandom(-300,300),800));
+            }
+            //===============SET TARGETS===============
+            for(int i=0;i<ps.size();i++){
+                float minDistance = 100000;
+                float index = 0;
+                
+                for(int b=0;b<targets.size();b++){
+                    if(targets[b].choosen==false){
+                        float distance;
+                        distance = ps[i].location.distance(targets[b].location);
+                        if(distance < minDistance){
+                            minDistance = distance;
+                            index = b;
+                        }
+                    }
+                }
+                // cout<<"the "<<i<<"'th particle's"<<" minimum distance is "<<minDistance<<" .......his index in [targets] is: "<<index<<endl;
+                ps[i].seek(targets[index].location);
+                ps[i].target_assigned = true;
+                targets[index].choosen = true;
+                ps[i].update();
+                //adjust movement parameter based on Meditation Level
+                ps[i].maxforce = ofMap(meditationLevel, 0, 90, 0.001, 5);
+                ps[i].maxspeed = ofMap(meditationLevel, 0, 90, 20, 5);
+                mesh.addVertex(ps[i].getPosition());
+                
+            }
+            
+            //=========GET CENTER POINT LOCATION=========
+            //
+            //        ofVec3f centerPoint;
+            //        ofVec3f Sum;
+            //        Sum.set(0, 0,0);
+            //        int count = 0;
+            //
+            //        for(int i=0;i<ps.size();i+=20){
+            //            count++;
+            //            Sum+=ps[i].location;
+            //        }
+            //
+            //        centerPoint = Sum / count;
+            //        cout<<centerPoint<<endl;
+            //
+            //        for (int i = 0; i<ps.size(); i++){
+            //            if(ps[i].target_assigned==false){
+            //                ps[i].seek(centerPoint+ofVec3f(ofRandom(-300,300),ofRandom(-300,300),ofRandom(-300,300)));
+            //            }
+            //        }
+            //
+            
+            
+            
+            
+            //==================JUST DRAW===============
+            ofPushMatrix();
+            ofSetColor(0, 0, 0);
+           // ofScale(1,-1,1);
+            glPointSize(2);
+            ofTranslate(pointCloudPos);
+            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            ofRotateY(yangle);
+            ofRotateZ(zangle);
+            ofRotateX(xangle);
+            mesh.draw();
+            ofPopMatrix();
+            
+            //  cout<<targets.size()<<endl;  //particles amount
+            
+            
+            //        for (int i = 0; i<ps.size(); i++){
+            //            ps[i].target_assigned = false;
+            //        }
+            //
+            
+        }//end [meditationlevel < 80] if_statment
+    }//end the [kinect.frameNew] if_statement
     
-    
-    
-    //////////PUSH MATRIX//////////////
-	ofPushMatrix();
-    ofPushStyle();
-    ofSetColor(0, 0, 0);
-    glPointSize(0.5);
-    ofTranslate(pointCloudPos);
-	ofEnableDepthTest();
-    //ofSetColor(0,0,0);
-    ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
-    ofRotateY(yangle);
-    ofRotateZ(zangle);
-    ofRotateX(xangle);
-	mesh.drawVertices();  //kmesh <-> mesh
-	ofDisableDepthTest();
-    ofPopStyle();
-	ofPopMatrix();
-    //////////PUSH MATRIX//////////////
-    
-    
-    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
-
-//    if(!noise){
-//        body.clear();
-//    }
-//    
-//    acceleration.clear();
-//    body2.clear();
- //   cout<<"----------------------"<<endl;
-    
-    /////PARTICLE TEMPORARY///////////////////////////////////////////////////////////////////////////
-
     
 }
 
@@ -411,54 +343,141 @@ void testApp::drawPointCloud(){
 
 #ifdef USE_TWO_KINECTS
 void testApp::drawAnotherPointCloud() {
-	int w = 640;
-	int h = 480;
-	ofMesh mesh2;
-    mesh2.setMode(OF_PRIMITIVE_POINTS);
-    if(loseCalmness==false){
-        int step = 10;
-        for(int y = 0; y < h; y += step) {
-            for(int x = 0; x < w; x += step) {
-                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1500) {
-                    //mesh.addColor(kinect.getColorAt(x,y));
-                    mesh2.addVertex(kinect2.getWorldCoordinateAt(x, y));
-                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+    if(kinect2.isFrameNew()){
+        
+        
+        if(meditationLevel>=90){
+            ofMesh mesh;
+            ofMesh kinectData;
+            kinectData.setMode(OF_PRIMITIVE_POINTS);
+            mesh.setMode(OF_PRIMITIVE_POINTS);
+            int w = 640;
+            int h = 480;
+            int step = 13;
+            vector<target> targets;
+            for(int y=0;y<h;y+=step){
+                for(int x=0;x<w;x+=step){
+                    if(kinect2.getDistanceAt(x, y)>0&&kinect2.getDistanceAt(x, y)<1500){
+                        mesh.addVertex(ofVec3f(kinect2.getWorldCoordinateAt(x, y)));
+                    }
                 }
             }
-        }
-    }
-    else{
-        int step = 10;
-        for(int y = 0; y < h; y += step) {
-            for(int x = 0; x < w; x += step) {
-                if(kinect2.getDistanceAt(x, y) > 0 && kinect2.getDistanceAt(x,y) < 1500) {
-                    //mesh.addColor(kinect.getColorAt(x,y));
-                    mesh2.addVertex(kinect2.getWorldCoordinateAt(x+ofRandom(-400+(timeDifference*80),400-(timeDifference*80)), y+ofRandom(-400+(timeDifference*80),400-(timeDifference*80))));
-                    //  ofLog() << " points cloud position: " << kinect.getWorldCoordinateAt(x, y);
+            ofPushMatrix();
+            ofSetColor(0, 0, 0);
+            // ofScale(1,-1,1);
+            glPointSize(2);
+            ofTranslate(pointCloudPos);
+            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            ofRotateY(yangle);
+            ofRotateZ(zangle);
+            ofRotateX(xangle);
+            mesh.draw();
+            ofPopMatrix();
+        }else{
+            ofMesh mesh;
+            ofMesh kinectData;
+            kinectData.setMode(OF_PRIMITIVE_POINTS);
+            mesh.setMode(OF_PRIMITIVE_POINTS);
+            int w = 640;
+            int h = 480;
+            int step = 9;
+            vector<target> targets;
+            for(int y=0;y<h;y+=step){
+                for(int x=0;x<w;x+=step){
+                    if(kinect2.getDistanceAt(x, y)>0 && kinect2.getDistanceAt(x, y)<1500){
+                        targets.push_back(ofVec3f(kinect2.getWorldCoordinateAt(x, y)));
+                        if(firstRun2 == false){
+                            ps2.push_back(ofVec3f(kinect2.getWorldCoordinateAt(x, y)));
+                        }
+                        
+                    }
                 }
             }
-        }
-    }
-    
-    
-    
-    //////////PUSH MATRIX//////////////
-	ofPushMatrix();
-    ofPushStyle();
-    ofEnableDepthTest();
-    
-    glPointSize(1);
-    ofTranslate(anotherPointCloudPos);
-    ofSetColor(255,0,0);
-    ofScale(kinectImageScale,kinectImageScale,kinectImageScale);
-    ofRotateY(x2angle);
-    ofRotateZ(y2angle);
-    ofRotateX(z2angle);
-	mesh2.drawVertices();
-	ofDisableDepthTest();
-    ofPopStyle();
-	ofPopMatrix();
-    //////////PUSH MATRIX//////////////
+            firstRun2 = true;
+            
+            
+            //compare the amount between our Particle Vector and all kinect particles
+            while(targets.size() > ps2.size()){
+                ps2.push_back(ofVec3f(ofRandom(-300,300), ofRandom(-300,300),800));
+            }
+            //===============SET TARGETS===============
+            for(int i=0;i<ps2.size();i++){
+                float minDistance = 100000;
+                float index = 0;
+                
+                for(int b=0;b<targets.size();b++){
+                    if(targets[b].choosen==false){
+                        float distance;
+                        distance = ps2[i].location.distance(targets[b].location);
+                        if(distance < minDistance){
+                            minDistance = distance;
+                            index = b;
+                        }
+                    }
+                }
+                // cout<<"the "<<i<<"'th particle's"<<" minimum distance is "<<minDistance<<" .......his index in [targets] is: "<<index<<endl;
+                ps2[i].seek(targets[index].location);
+                ps2[i].target_assigned = true;
+                targets[index].choosen = true;
+                ps2[i].update();
+                //adjust movement parameter based on Meditation Level
+                ps2[i].maxforce = ofMap(meditationLevel, 0, 90, 0.001, 5);
+                ps2[i].maxspeed = ofMap(meditationLevel, 0, 90, 20, 5);
+                mesh.addVertex(ps2[i].getPosition());
+                
+            }
+            
+            //=========GET CENTER POINT LOCATION=========
+            //
+            //        ofVec3f centerPoint;
+            //        ofVec3f Sum;
+            //        Sum.set(0, 0,0);
+            //        int count = 0;
+            //
+            //        for(int i=0;i<ps.size();i+=20){
+            //            count++;
+            //            Sum+=ps[i].location;
+            //        }
+            //
+            //        centerPoint = Sum / count;
+            //        cout<<centerPoint<<endl;
+            //
+            //        for (int i = 0; i<ps.size(); i++){
+            //            if(ps[i].target_assigned==false){
+            //                ps[i].seek(centerPoint+ofVec3f(ofRandom(-300,300),ofRandom(-300,300),ofRandom(-300,300)));
+            //            }
+            //        }
+            //
+            
+            
+            
+            
+            //==================JUST DRAW===============
+            ofPushMatrix();
+            ofPushStyle();
+            ofSetColor(200, 0, 0);
+            ofEnableDepthTest();
+            // ofScale(1,-1,1);
+            glPointSize(2);
+            ofTranslate(anotherPointCloudPos);
+            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            ofRotateY(y2angle);
+            ofRotateZ(z2angle);
+            ofRotateX(x2angle);
+            mesh.draw();
+            ofPopStyle();
+            ofPopMatrix();
+            
+            
+            //        for (int i = 0; i<ps.size(); i++){
+            //            ps[i].target_assigned = false;
+            //        }
+            //
+            
+        }//end [meditationlevel < 80] if_statment
+    }//end the [kinect.frameNew] if_statement
     
 }
 #endif
@@ -490,21 +509,16 @@ void testApp::guiEvent(ofxUIEventArgs &e)
 {
     
     
-    if(e.getName() == "BACKGROUND")
-    {
-        ofxUISlider *slider = e.getSlider();
-        ofBackground(slider->getScaledValue());
-    }
-    else if(e.getName() == "FULLSCREEN")
+    if(e.getName() == "FULLSCREEN")
     {
         ofxUIToggle *toggle = e.getToggle();
         ofSetFullscreen(toggle->getValue());
         
-    }else if(e.getName() == "X_POSITION_OF_CLOUD_ONE" ){
+    }else if(e.getName() == "Meditation_Level")
+    {
         ofxUISlider *slider = e.getSlider();
-        px = slider->getScaledValue();
+        meditationLevel = slider->getScaledValue();
     }
-    
     
     
 }
@@ -679,16 +693,7 @@ void testApp::keyPressed(int key){
             showRoom = !showRoom;
             break;
             
-        case 'q':
-            loseCalmness = true;
-            timeStampA=ofGetElapsedTimef();
-            break;
-            
-//        case '/':
-//            noise = !noise;
-//            TimeToDoLastRead = true;
-//            timer = 0;
-//            break;
+  
 
     }
     
