@@ -2,35 +2,25 @@
 
 //--------------------------------------------------------------
 void testApp::setup(){
-    
     //general
-    ofBackground(255, 255, 255);
-    ofSetFrameRate(30);
-    ofEnableSmoothing();
+    ofBackground(0);
     //kinect one image rotate parameters
-    xangle = 179;
-    yangle = 86;
-    zangle = 0;
+    xangle = 25;
+    yangle = -79;
+    zangle = -14; //-14
     //kinect two image rotate parameters
-    x2angle = 457;
-    y2angle = 181;
-    z2angle = -3;
+    x2angle = 0;
+    y2angle = 94;
+    z2angle = 0;
     
     //roomRotate
     roomRotateX=270;
     roomRotateY=0;
     roomRotateZ=0;
     
-    //lights
-    ofSetSmoothLighting(true);
-   // pointLight.setPointLight();
-    lightPos.set(ofVec3f(0,0,400)); //point light position
-    pointLight.setPosition(lightPos);
-    
-    
     //3d model
-    roomModel.loadModel("noneRoom.3ds");
-     roomModel.setScale(50, 50, 50);
+    roomModel.loadModel("APR14.3ds");
+    roomModel.setScale(50, 50, 50);
     //roomModel.setScale(400,400,400);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
@@ -47,30 +37,28 @@ void testApp::setup(){
 #endif
     
     //point cloud translation values:
-    px = -160;
-    py = -530;
-    pz = 280;
-
-    
-    p2x = -320;
-    p2y = -510;
-    p2z = 290;
+    px = 170;
+    py = 370;
+    pz = -560;
     
     
+    p2x = -280;
+    p2y = 400;
+    p2z = -260;
     
     //osculus rift
     oculusRift.baseCamera = &cam;
-    cam.setDistance(400.f);
+    camDistance = 400.f;
+    cam.setDistance(camDistance);
     oculusRift.setup();
     
     
     //text
-    zero.loadFont("Helvetica.dfont", 5);
     cam.begin();
     cam.end();
-
     
-   // ofToggleFullscreen();
+    
+    // ofToggleFullscreen();
     
     //Serial Communication
     serial.listDevices();
@@ -78,48 +66,62 @@ void testApp::setup(){
     
     //GUI
     gui = new ofxUICanvas();
+    gui->setTheme(3);
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
+    gui->addSlider("camera_distance", 0.f, 1600.f, 400.f);
+    gui->addSlider("background_color", 0.f, 255.f, 0.f);
     gui->addToggle("FULLSCREEN", false);
-
+//    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
     gui->autoSizeToFitWidgets();
-  
     ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
     
     //osc
     meditationLevel = 100;
     receiver.setup(PORT);
     
-    //particle system
     
+    //sound
+    backgroundMusic.loadSound("bgsound.mp3");
+    backgroundMusic.setVolume(1.3);
+    backgroundMusic.setMultiPlay(false);
+    backgroundMusic.play();
+    backgroundMusic.setLoop(true);
+    tinnitus.loadSound("Tinnitus.wav");
+    tinnitus.setVolume(0);
+    tinnitus.play();
+    tinnitus.setLoop(true);
     
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-
     
-    //osc:
+    ofSoundUpdate();
+    
+    cam.setDistance(camDistance);
+    
+    
+    
+    //OSC::::
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(&m);
         if (m.getAddress() == "/meditation") {
-            // cout<<m.getArgAsFloat(0)<<endl;
             meditationLevel = ofMap(m.getArgAsFloat(0), 0, 100, 0, 120);
             cout<<meditationLevel<<endl;
         }
     }
     
+    tinnitus.setVolume(ofMap(meditationLevel, 0, 120, 1, 0));
+    backgroundMusic.setVolume(ofMap(meditationLevel, 0, 120, 0, 1));
     //serial
-    
     if(serial.available()>0){
         analogRead = serial.readByte();
         cout<< "serial input data -> " <<analogRead<<endl;
     }
     
     
-    //light position
-    pointLight.setPosition(lightPos);
-    //kinect #one position
+       //kinect #one position
     pointCloudPos.set(px,py,pz);
     //kinect #two position
     anotherPointCloudPos.set(p2x,p2y,p2z);
@@ -139,8 +141,20 @@ void testApp::update(){
 //--------------------------------------------------------------
 void testApp::draw(){
     
+    if(meditationLevel < 90 ){
+        camDistance-=(ofNoise(ofGetElapsedTimef()));
+    }else{
+        camDistance--;
+        if (camDistance<300) {
+            camDistance=300;
+        }
+    }
+    
+
     if(oculusRift.isSetup()){
-        ofSetColor(255, 255, 255);
+        ofNoFill();
+        
+        glEnable(GL_DEPTH_TEST);
         oculusRift.beginLeftEye();
         drawScene();
         oculusRift.endLeftEye();
@@ -148,7 +162,10 @@ void testApp::draw(){
         oculusRift.beginRightEye();
         drawScene();
         oculusRift.endRightEye();
+     
         oculusRift.draw();
+        glDisable(GL_DEPTH_TEST);
+
     }else{
         cam.begin();
         drawScene();
@@ -162,11 +179,7 @@ void testApp::draw(){
 void testApp::drawScene()
 {
 	
-    
-   // pointLight.enable();
-    
-    ofPushStyle();
-    
+
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
     drawPointCloud();
@@ -176,41 +189,28 @@ void testApp::drawScene()
     ofPushMatrix();
     drawAnotherPointCloud();
     ofPopMatrix();
-    
 #endif
-    
-    
-    
-    if(showRoom){
         ofEnableDepthTest();
-        //--------Draw 3D Room-------
         ofPushMatrix();
-        ofSetColor(255, 255, 255);
+        ofSetColor(255);
         ofRotateX(270);
         ofRotateY(roomRotateY);
         ofTranslate(roomModelPos);
         roomModel.draw();
         ofPopMatrix();
-    }
     
-    ofPopStyle();
-   // pointLight.disable();
     
 }
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
     if(kinect.isFrameNew()){
-     
-        
-        if(meditationLevel>=90){
+        if(meditationLevel >= 90){
             ofMesh mesh;
-            ofMesh kinectData;
-            kinectData.setMode(OF_PRIMITIVE_POINTS);
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 9;
+            int step = 13;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -220,18 +220,24 @@ void testApp::drawPointCloud(){
                 }
             }
             ofPushMatrix();
-            ofSetColor(0, 0, 0);
-            // ofScale(1,-1,1);
+            ofPushStyle();
+            ofSetColor(0);
             glPointSize(2);
-            ofTranslate(pointCloudPos);
-            ofEnableDepthTest();
-            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            //point one flip function...
+            ofScale(-1, -1,1);
             ofRotateY(yangle);
             ofRotateZ(zangle);
             ofRotateX(xangle);
+            ofTranslate(pointCloudPos);
+            
+            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            
             mesh.draw();
+            ofPopStyle();
             ofPopMatrix();
         }else{
+            
             
             ofMesh mesh;
             ofMesh kinectData;
@@ -239,7 +245,7 @@ void testApp::drawPointCloud(){
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 9;
+            int step = 13;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -253,7 +259,6 @@ void testApp::drawPointCloud(){
                 }
             }
             firstRun = true;
-            
             
             //compare the amount between our Particle Vector and all kinect particles
             while(targets.size() > ps.size()){
@@ -308,31 +313,29 @@ void testApp::drawPointCloud(){
             //        }
             //
             
-            
-            
-            
             //==================JUST DRAW===============
             ofPushMatrix();
-            ofSetColor(0, 0, 0);
-           // ofScale(1,-1,1);
+            ofPushStyle();
+            ofSetColor(0);
+            //point one flip function...
+
+            // ofScale(1,-1,1);
             glPointSize(2);
-            ofTranslate(pointCloudPos);
-            ofEnableDepthTest();
-            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            ofScale(-1, -1,1);
             ofRotateY(yangle);
             ofRotateZ(zangle);
             ofRotateX(xangle);
+            ofTranslate(pointCloudPos);
+            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+  
             mesh.draw();
+            ofPopStyle();
             ofPopMatrix();
-            
-            //  cout<<targets.size()<<endl;  //particles amount
-            
-            
-            //        for (int i = 0; i<ps.size(); i++){
+                        //        for (int i = 0; i<ps.size(); i++){
             //            ps[i].target_assigned = false;
             //        }
             //
-            
         }//end [meditationlevel < 80] if_statment
     }//end the [kinect.frameNew] if_statement
     
@@ -348,8 +351,6 @@ void testApp::drawAnotherPointCloud() {
         
         if(meditationLevel>=90){
             ofMesh mesh;
-            ofMesh kinectData;
-            kinectData.setMode(OF_PRIMITIVE_POINTS);
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
@@ -363,15 +364,17 @@ void testApp::drawAnotherPointCloud() {
                 }
             }
             ofPushMatrix();
-            ofSetColor(0, 0, 0);
-            // ofScale(1,-1,1);
+            ofSetColor(0,0,0);
+            //point two flip function...
+            ofScale(-1,-1,1);
             glPointSize(2);
-            ofTranslate(pointCloudPos);
+            ofRotateY(y2angle);
+            ofRotateZ(z2angle);
+            ofRotateX(x2angle);
+            ofTranslate(anotherPointCloudPos);
             ofEnableDepthTest();
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
-            ofRotateY(yangle);
-            ofRotateZ(zangle);
-            ofRotateX(xangle);
+         
             mesh.draw();
             ofPopMatrix();
         }else{
@@ -381,7 +384,7 @@ void testApp::drawAnotherPointCloud() {
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 9;
+            int step = 13;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -449,23 +452,18 @@ void testApp::drawAnotherPointCloud() {
             //            }
             //        }
             //
-            
-            
-            
-            
             //==================JUST DRAW===============
             ofPushMatrix();
             ofPushStyle();
-            ofSetColor(200, 0, 0);
+            ofSetColor(0,0,0);
             ofEnableDepthTest();
-            // ofScale(1,-1,1);
+            ofScale(-1,-1,1);
             glPointSize(2);
-            ofTranslate(anotherPointCloudPos);
-            ofEnableDepthTest();
-            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
             ofRotateY(y2angle);
             ofRotateZ(z2angle);
             ofRotateX(x2angle);
+            ofTranslate(anotherPointCloudPos);            ofEnableDepthTest();
+            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
             mesh.draw();
             ofPopStyle();
             ofPopMatrix();
@@ -490,13 +488,8 @@ void testApp::closeKinect(){
     kinect.close();
     
 #ifdef USE_TWO_KINECTS
-    //kinect2.setCameraTiltAngle(0);
 	kinect2.close();
 #endif
-    
- 
-    
-    
 }
 
 void testApp::exitUI(){
@@ -507,43 +500,31 @@ void testApp::exitUI(){
 
 void testApp::guiEvent(ofxUIEventArgs &e)
 {
-    
-    
     if(e.getName() == "FULLSCREEN")
     {
         ofxUIToggle *toggle = e.getToggle();
         ofSetFullscreen(toggle->getValue());
-        
     }else if(e.getName() == "Meditation_Level")
     {
         ofxUISlider *slider = e.getSlider();
         meditationLevel = slider->getScaledValue();
+    }else if(e.getName() == "camera_distance"){
+        ofxUISlider *slider = e.getSlider();
+        camDistance = slider->getScaledValue();
+    }else if(e.getName() == "background_color"){
+        ofxUISlider *slider = e.getSlider();
+        ofBackground(slider->getScaledValue());
     }
-    
-    
 }
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     
     float step = 30;
-    ofVec3f *lightpos = &lightPos;
     
     switch (key) {
             
-        case 'n':
-            angle--;
-            if(angle<-30)angle=-30;
-            kinect.setCameraTiltAngle(angle);
-            break;
-            
-        case 'm':
-            angle++;
-            if(angle>30)angle=30;
-            kinect.setCameraTiltAngle(angle);
-            break;
-            
-/////////////////////////modify camera position by x,y,z key////////////////////////////////////////////////
+            /////////////////////////modify camera position by x,y,z key////////////////////////////////////////////////
         case 'x':
             //            *lightpos -= ofVec3f(-step,0,0);
             xangle +=1;
@@ -583,9 +564,8 @@ void testApp::keyPressed(int key){
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             break;
             
-/////////////////////////////////rotate kinect 2//////////////////////////////////////////////
+            /////////////////////////////////rotate kinect 2//////////////////////////////////////////////
             
-            //modify camera position by x,y,z key
         case 'j':
             //            *lightpos -= ofVec3f(-step,0,0);
             x2angle +=1;
@@ -625,7 +605,7 @@ void testApp::keyPressed(int key){
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
             break;
             
-        //////////KINECT ONE POSITION---------------
+            //////////KINECT ONE POSITION---------------
         case 'p':
             pz+=10;
             cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
@@ -657,7 +637,7 @@ void testApp::keyPressed(int key){
             cout<< "Point Cloud's  position is "<< px<<","<<py<<","<<pz<<endl;
             break;
             
-        //////////////KINECT TWO position   ---------------
+            //////////////KINECT TWO position   ---------------
         case 'f':
             p2z+=10;
             cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
@@ -688,13 +668,6 @@ void testApp::keyPressed(int key){
             p2x+=10;
             cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
             break;
-            
-        case 'b':
-            showRoom = !showRoom;
-            break;
-            
-  
-
     }
     
     

@@ -41,7 +41,7 @@ void particle::seek(ofVec3f target){
 void particle::display(){
     float size = 1;
     ofPushMatrix();
-    ofSetColor(0, 0, 0);
+    ofSetColor(255, 255, 255);
     ofDrawBox(location.x, location.y, location.z, size, size, size);
     ofPopMatrix();
 }

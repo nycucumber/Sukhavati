@@ -84,5 +84,12 @@ public:
     //OSC
     ofxOscReceiver receiver;
     
+    //cam
+    float camDistance;
+    
+    //sound
+    ofSoundPlayer backgroundMusic;
+    ofSoundPlayer tinnitus;
+    
     
 };
