@@ -21,7 +21,6 @@ void testApp::setup(){
     //3d model
     roomModel.loadModel("APR14.3ds");
     roomModel.setScale(50, 50, 50);
-    //roomModel.setScale(400,400,400);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
     
@@ -66,15 +65,17 @@ void testApp::setup(){
     
     //GUI
     gui = new ofxUICanvas();
-    gui->setTheme(3);
+    gui->setTheme(0);
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addSlider("camera_distance", 0.f, 1600.f, 400.f);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
+    gui->addSlider("Whole_Scene_Position_x", -600.f, 600.f, 0.f);
+    gui->addSlider("Whole_Scene_Position_y", -600.f, 600.f, 0.f);
+    gui->addSlider("Whole_Scene_Position_z", -600.f, 600.f, 0.f);
     gui->addToggle("FULLSCREEN", false);
 //    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
     gui->autoSizeToFitWidgets();
     ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
-    
     //osc
     meditationLevel = 100;
     receiver.setup(PORT);
@@ -91,37 +92,35 @@ void testApp::setup(){
     tinnitus.play();
     tinnitus.setLoop(true);
     
+    
+    
+    whole_scene_x=0;
+    whole_scene_y=0;
+    whole_scene_z=0;
+    
 }
-
 //--------------------------------------------------------------
 void testApp::update(){
-    
     ofSoundUpdate();
-    
     cam.setDistance(camDistance);
-    
-    
-    
     //OSC::::
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(&m);
         if (m.getAddress() == "/meditation") {
-            meditationLevel = ofMap(m.getArgAsFloat(0), 0, 100, 0, 120);
+            meditationLevel = ofMap(m.getArgAsFloat(0), 0, 100, 0, 100);
             cout<<meditationLevel<<endl;
         }
     }
-    
+    //Sound Update
     tinnitus.setVolume(ofMap(meditationLevel, 0, 120, 1, 0));
     backgroundMusic.setVolume(ofMap(meditationLevel, 0, 120, 0, 1));
-    //serial
+    //serial input
     if(serial.available()>0){
         analogRead = serial.readByte();
         cout<< "serial input data -> " <<analogRead<<endl;
     }
-    
-    
-       //kinect #one position
+    //kinect #one position
     pointCloudPos.set(px,py,pz);
     //kinect #two position
     anotherPointCloudPos.set(p2x,p2y,p2z);
@@ -129,6 +128,9 @@ void testApp::update(){
     if(oculusRift.isSetup()){
         ofRectangle viewport  =  oculusRift.getOculusViewport();
     }
+    
+    
+    //UI
     
     
     //update Kinects
@@ -179,7 +181,8 @@ void testApp::draw(){
 void testApp::drawScene()
 {
 	
-
+    ofPushMatrix();
+    ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
     drawPointCloud();
@@ -198,6 +201,7 @@ void testApp::drawScene()
         ofTranslate(roomModelPos);
         roomModel.draw();
         ofPopMatrix();
+    ofPopMatrix();
     
     
 }
@@ -222,7 +226,7 @@ void testApp::drawPointCloud(){
             ofPushMatrix();
             ofPushStyle();
             ofSetColor(0);
-            glPointSize(2);
+            glPointSize(1);
             //point one flip function...
             ofScale(-1, -1,1);
             ofRotateY(yangle);
@@ -285,7 +289,7 @@ void testApp::drawPointCloud(){
                 targets[index].choosen = true;
                 ps[i].update();
                 //adjust movement parameter based on Meditation Level
-                ps[i].maxforce = ofMap(meditationLevel, 0, 90, 0.001, 5);
+                ps[i].maxforce = ofMap(meditationLevel, 0, 90, 0.01, 5);
                 ps[i].maxspeed = ofMap(meditationLevel, 0, 90, 20, 5);
                 mesh.addVertex(ps[i].getPosition());
                 
@@ -320,7 +324,7 @@ void testApp::drawPointCloud(){
             //point one flip function...
 
             // ofScale(1,-1,1);
-            glPointSize(2);
+            glPointSize(1);
             ofScale(-1, -1,1);
             ofRotateY(yangle);
             ofRotateZ(zangle);
@@ -367,7 +371,7 @@ void testApp::drawAnotherPointCloud() {
             ofSetColor(0,0,0);
             //point two flip function...
             ofScale(-1,-1,1);
-            glPointSize(2);
+            glPointSize(1);
             ofRotateY(y2angle);
             ofRotateZ(z2angle);
             ofRotateX(x2angle);
@@ -458,7 +462,7 @@ void testApp::drawAnotherPointCloud() {
             ofSetColor(0,0,0);
             ofEnableDepthTest();
             ofScale(-1,-1,1);
-            glPointSize(2);
+            glPointSize(1);
             ofRotateY(y2angle);
             ofRotateZ(z2angle);
             ofRotateX(x2angle);
@@ -514,6 +518,15 @@ void testApp::guiEvent(ofxUIEventArgs &e)
     }else if(e.getName() == "background_color"){
         ofxUISlider *slider = e.getSlider();
         ofBackground(slider->getScaledValue());
+    }else if(e.getName() == "Whole_Scene_Position_x"){
+        ofxUISlider *slider = e.getSlider();
+        whole_scene_x = slider->getScaledValue();
+    }else if(e.getName() == "Whole_Scene_Position_y"){
+        ofxUISlider *slider = e.getSlider();
+        whole_scene_y = slider->getScaledValue();
+    }else if(e.getName() == "Whole_Scene_Position_z"){
+        ofxUISlider *slider = e.getSlider();
+        whole_scene_z = slider->getScaledValue();
     }
 }
 
@@ -526,40 +539,34 @@ void testApp::keyPressed(int key){
             
             /////////////////////////modify camera position by x,y,z key////////////////////////////////////////////////
         case 'x':
-            //            *lightpos -= ofVec3f(-step,0,0);
             xangle +=1;
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             
             break;
         case 'X':
-            //            *lightpos += ofVec3f(-step,0,0);
             xangle-=1;
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             
             break;
         case 'y':
-            //            *lightpos += ofVec3f(0,step,0);
             yangle+=1;
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             
             break;
             
         case 'Y':
-            //            *lightpos += ofVec3f(0,-step,0);
             yangle-=1;
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             
             break;
             
         case 'z':
-            //            *lightpos += ofVec3f(0,0,step);
             zangle+=1;
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             
             break;
             
         case 'Z':
-            //            *lightpos += ofVec3f(0,0,-step);
             zangle-=1;
             cout<<xangle<<","<<yangle<<","<<zangle<<endl;
             break;
@@ -567,40 +574,30 @@ void testApp::keyPressed(int key){
             /////////////////////////////////rotate kinect 2//////////////////////////////////////////////
             
         case 'j':
-            //            *lightpos -= ofVec3f(-step,0,0);
             x2angle +=1;
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
             
             break;
         case 'J':
-            //            *lightpos += ofVec3f(-step,0,0);
             x2angle-=1;
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
             
             break;
         case 'k':
-            //            *lightpos += ofVec3f(0,step,0);
             y2angle+=1;
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
             
             break;
             
         case 'K':
-            //            *lightpos += ofVec3f(0,-step,0);
             y2angle-=1;
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
-            
             break;
-            
         case 'l':
-            //            *lightpos += ofVec3f(0,0,step);
             z2angle+=1;
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
-            
             break;
-            
         case 'L':
-            //            *lightpos += ofVec3f(0,0,-step);
             z2angle-=1;
             cout<<x2angle<<","<<y2angle<<","<<z2angle<<endl;
             break;
@@ -667,6 +664,13 @@ void testApp::keyPressed(int key){
         case 'H':
             p2x+=10;
             cout<< "Point 2 Cloud's  position is "<< p2x<<","<<p2y<<","<<p2z<<endl;
+            break;
+            
+        case'm':
+            meditationLevel++;
+            break;
+        case'M':
+            meditationLevel--;
             break;
     }
     

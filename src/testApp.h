@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_TWO_KINECTS
+//#define USE_TWO_KINECTS
 
 #include "ofMain.h"
 #include "ofxKinect.h"
@@ -15,12 +15,8 @@
 #define PORT 4444
 #define NUM_MSG_STRINGS 20
 
-
-
-
 class testApp : public ofBaseApp{
 
-    
 public:
     void setup();
     void update();
@@ -34,8 +30,6 @@ public:
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
-    
-    
     void drawPointCloud();
     void closeKinect();
     void drawScene();
@@ -66,10 +60,7 @@ public:
     float analogRead;
     float xangle,yangle,zangle;
     float x2angle,y2angle,z2angle;
-
     float roomRotateX,roomRotateY,roomRotateZ;
-
-
     //UI
     ofxUICanvas * gui;
     void exitUI();
@@ -90,6 +81,10 @@ public:
     //sound
     ofSoundPlayer backgroundMusic;
     ofSoundPlayer tinnitus;
+    
+    
+    //positions...
+    float whole_scene_x,whole_scene_y,whole_scene_z;
     
     
 };
