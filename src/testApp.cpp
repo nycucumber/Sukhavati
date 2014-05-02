@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void testApp::setup(){
     //general
-    ofBackground(0);
+    ofBackground(255);
     //kinect one image rotate parameters
     xangle = 25;
     yangle = -79;
@@ -19,11 +19,10 @@ void testApp::setup(){
     roomRotateZ=0;
     
     //3d model
-    roomModel.loadModel("APR14.3ds");
+    roomModel.loadModel("final.3ds");
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
-    
     
     //kinect
     kinect.setRegistration();
@@ -52,57 +51,70 @@ void testApp::setup(){
     oculusRift.setup();
     
     
-    //text
+    //camera
+    cam.disableMouseInput();
     cam.begin();
     cam.end();
-    
-    
-    // ofToggleFullscreen();
     
     //Serial Communication
     serial.listDevices();
     serial.setup();
     
+    
     //GUI
     gui = new ofxUICanvas();
     gui->setTheme(0);
+    gui->addFPS();
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
-    gui->addSlider("camera_distance", 0.f, 1600.f, 400.f);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
-    gui->addSlider("Whole_Scene_Position_x", -600.f, 600.f, 0.f);
-    gui->addSlider("Whole_Scene_Position_y", -600.f, 600.f, 0.f);
-    gui->addSlider("Whole_Scene_Position_z", -600.f, 600.f, 0.f);
+    gui->addSlider("Whole_Scene_Position_x", -600.f, 600.f, 404.f);
+    gui->addSlider("Whole_Scene_Position_y", -600.f, 600.f, 333.f);
+    gui->addSlider("Whole_Scene_Position_z", -600.f, 600.f, -304.f);
+    gui->addSlider("Whole_Scene_Rotate_x", 0.f, 360.f, 81.f);
+    gui->addSlider("Whole_Scene_Rotate_y", 0.f, 360.f, 266.f);
+    gui->addSlider("Whole_Scene_Rotate_z", 0.f, 360.f, 83.f);
     gui->addToggle("FULLSCREEN", false);
-//    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
+    //    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
     gui->autoSizeToFitWidgets();
     ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
+    
+    
     //osc
     meditationLevel = 100;
     receiver.setup(PORT);
     
     
     //sound
-    backgroundMusic.loadSound("bgsound.mp3");
-    backgroundMusic.setVolume(1.3);
-    backgroundMusic.setMultiPlay(false);
-    backgroundMusic.play();
-    backgroundMusic.setLoop(true);
-    tinnitus.loadSound("Tinnitus.wav");
-    tinnitus.setVolume(0);
-    tinnitus.play();
-    tinnitus.setLoop(true);
+    meditationSound.loadSound("BOWL.mp3");
+    meditationSound.setVolume(1.3);
+    meditationSound.setMultiPlay(false);
+    meditationSound.play();
+    meditationSound.setLoop(true);
+    distractionSound.loadSound("whitenoise.mp3");
+    distractionSound.setVolume(0);
+    distractionSound.play();
+    distractionSound.setLoop(true);
     
+    //y is the flying height
     
+    whole_scene_x = 404;
+    whole_scene_y = 333;
+    whole_scene_z = -304;
     
-    whole_scene_x=0;
-    whole_scene_y=0;
-    whole_scene_z=0;
+    scene_rx = 81;
+    scene_ry = 266;
+    scene_rz = 83;
+    
+    //Primitive Box -  Room
+   // room.set(900);
+    
+    resetPosition = true;
     
 }
 //--------------------------------------------------------------
 void testApp::update(){
+//    room.setPosition(0, 0, 0);
     ofSoundUpdate();
-    cam.setDistance(camDistance);
     //OSC::::
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
@@ -113,8 +125,8 @@ void testApp::update(){
         }
     }
     //Sound Update
-    tinnitus.setVolume(ofMap(meditationLevel, 0, 120, 1, 0));
-    backgroundMusic.setVolume(ofMap(meditationLevel, 0, 120, 0, 1));
+    distractionSound.setVolume(ofMap(meditationLevel, 0, 100, 1, 0.5));
+    meditationSound.setVolume(ofMap(meditationLevel, 0, 100, 0, 1));
     //serial input
     if(serial.available()>0){
         analogRead = serial.readByte();
@@ -133,26 +145,42 @@ void testApp::update(){
     //UI
     
     
+    //shader
+    
     //update Kinects
     kinect.update();
 #ifdef USE_TWO_KINECTS
     kinect2.update();
 #endif
+    
+    //reset initial position for next user
+    if(resetPosition == true){
+        whole_scene_x = 404;
+        whole_scene_y = 333;
+        whole_scene_z = -304;
+        scene_rx = 81;
+        scene_ry = 266;
+        scene_rz = 83;
+        ta = ofGetElapsedTimef();
+        raising = true;
+        resetPosition = false;
+    }
+    
+    if(raising){
+        whole_scene_y -= 0.3;
+    }
+    if(whole_scene_y < -300 && raising){
+        raising = false;
+    }
+    
+    
+
+    
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
     
-    if(meditationLevel < 90 ){
-        camDistance-=(ofNoise(ofGetElapsedTimef()));
-    }else{
-        camDistance--;
-        if (camDistance<300) {
-            camDistance=300;
-        }
-    }
-    
-
     if(oculusRift.isSetup()){
         ofNoFill();
         
@@ -167,7 +195,6 @@ void testApp::draw(){
      
         oculusRift.draw();
         glDisable(GL_DEPTH_TEST);
-
     }else{
         cam.begin();
         drawScene();
@@ -181,10 +208,17 @@ void testApp::draw(){
 void testApp::drawScene()
 {
 	
+    
+    pointLight.enable();
     ofPushMatrix();
+    ofRotateX(scene_rx);
+    ofRotateY(scene_ry);
+    ofRotateZ(scene_rz);
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
+//    room.setMode(OF_PRIMITIVE_LINE_LOOP);
+   // room.draw();
     drawPointCloud();
     ofPopMatrix();
 #ifdef USE_TWO_KINECTS
@@ -201,7 +235,7 @@ void testApp::drawScene()
         ofTranslate(roomModelPos);
         roomModel.draw();
         ofPopMatrix();
-    ofPopMatrix();
+        ofPopMatrix();
     
     
 }
@@ -209,12 +243,12 @@ void testApp::drawScene()
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
     if(kinect.isFrameNew()){
-        if(meditationLevel >= 90){
+        if(meditationLevel >= 80 && meditationLevel < 95){
             ofMesh mesh;
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 13;
+            int step = 14;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -225,7 +259,7 @@ void testApp::drawPointCloud(){
             }
             ofPushMatrix();
             ofPushStyle();
-            ofSetColor(0);
+            ofSetColor(255);
             glPointSize(1);
             //point one flip function...
             ofScale(-1, -1,1);
@@ -249,7 +283,7 @@ void testApp::drawPointCloud(){
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 13;
+            int step = 14;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -358,7 +392,7 @@ void testApp::drawAnotherPointCloud() {
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 13;
+            int step = 14;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -388,7 +422,7 @@ void testApp::drawAnotherPointCloud() {
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 13;
+            int step = 14;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -527,6 +561,15 @@ void testApp::guiEvent(ofxUIEventArgs &e)
     }else if(e.getName() == "Whole_Scene_Position_z"){
         ofxUISlider *slider = e.getSlider();
         whole_scene_z = slider->getScaledValue();
+    }else if(e.getName() == "Whole_Scene_Rotate_x"){
+        ofxUISlider *slider = e.getSlider();
+        scene_rx = slider->getScaledValue();
+    }else if(e.getName() == "Whole_Scene_Rotate_y"){
+        ofxUISlider *slider = e.getSlider();
+        scene_ry = slider->getScaledValue();
+    }else if(e.getName() == "Whole_Scene_Rotate_z"){
+        ofxUISlider *slider = e.getSlider();
+        scene_rz = slider->getScaledValue();
     }
 }
 
@@ -671,6 +714,9 @@ void testApp::keyPressed(int key){
             break;
         case'M':
             meditationLevel--;
+            break;
+        case 'r':
+            resetPosition = true;
             break;
     }
     

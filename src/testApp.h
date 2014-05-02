@@ -79,12 +79,20 @@ public:
     float camDistance;
     
     //sound
-    ofSoundPlayer backgroundMusic;
-    ofSoundPlayer tinnitus;
+    ofSoundPlayer meditationSound;
+    ofSoundPlayer distractionSound;
     
     
     //positions...
     float whole_scene_x,whole_scene_y,whole_scene_z;
+    float scene_rx,scene_ry,scene_rz;
+    
+    ofShader blur;
+
+    //Timer
+    bool resetPosition;
+    float ta, tb;
+    bool raising;
     
     
 };
