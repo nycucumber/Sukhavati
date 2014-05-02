@@ -106,21 +106,32 @@ void testApp::setup(){
     scene_rz = 83;
     
     //Primitive Box -  Room
-   // room.set(900);
+    // room.set(900);
     
     resetPosition = true;
+    
+    //shader::
+    if(ofGetGLProgrammableRenderer()){
+		billboardShader.load("shadersGL3/Billboard");
+	}else{
+		billboardShader.load("shadersGL2/Billboard");
+	}
+    ofDisableArbTex();
+	texture.loadImage("dot.png");
+	ofEnableAlphaBlending();
+
     
 }
 //--------------------------------------------------------------
 void testApp::update(){
-//    room.setPosition(0, 0, 0);
+    //    room.setPosition(0, 0, 0);
     ofSoundUpdate();
     //OSC::::
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(&m);
         if (m.getAddress() == "/meditation") {
-            meditationLevel = ofMap(m.getArgAsFloat(0), 0, 100, 0, 100);
+            meditationLevel =m.getArgAsFloat(0);
             cout<<meditationLevel<<endl;
         }
     }
@@ -174,7 +185,7 @@ void testApp::update(){
     }
     
     
-
+    
     
 }
 
@@ -192,7 +203,7 @@ void testApp::draw(){
         oculusRift.beginRightEye();
         drawScene();
         oculusRift.endRightEye();
-     
+        
         oculusRift.draw();
         glDisable(GL_DEPTH_TEST);
     }else{
@@ -217,8 +228,8 @@ void testApp::drawScene()
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
-//    room.setMode(OF_PRIMITIVE_LINE_LOOP);
-   // room.draw();
+    //    room.setMode(OF_PRIMITIVE_LINE_LOOP);
+    // room.draw();
     drawPointCloud();
     ofPopMatrix();
 #ifdef USE_TWO_KINECTS
@@ -227,40 +238,42 @@ void testApp::drawScene()
     drawAnotherPointCloud();
     ofPopMatrix();
 #endif
-        ofEnableDepthTest();
-        ofPushMatrix();
-        ofSetColor(255);
-        ofRotateX(270);
-        ofRotateY(roomRotateY);
-        ofTranslate(roomModelPos);
-        roomModel.draw();
-        ofPopMatrix();
-        ofPopMatrix();
-    
-    
+    ofEnableDepthTest();
+    ofPushMatrix();
+    ofSetColor(255);
+    ofRotateX(270);
+    ofRotateY(roomRotateY);
+    ofTranslate(roomModelPos);
+    roomModel.draw();
+    ofPopMatrix();
+    ofPopMatrix();
 }
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
     if(kinect.isFrameNew()){
         if(meditationLevel >= 80 && meditationLevel < 95){
-            ofMesh mesh;
+            ofVboMesh mesh;
+            mesh.setUsage(GL_DYNAMIC_DRAW);
+            mesh.getNormals().resize(2000,ofVec3f(0));
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
             int step = 14;
+            int i = 0;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
                     if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
                         mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                        mesh.setNormal(i,ofVec3f(3+ofNoise(ofGetElapsedTimef()+i),0,0));
+                        i++;
                     }
                 }
             }
             ofPushMatrix();
             ofPushStyle();
             ofSetColor(255);
-            glPointSize(1);
             //point one flip function...
             ofScale(-1, -1,1);
             ofRotateY(yangle);
@@ -268,10 +281,16 @@ void testApp::drawPointCloud(){
             ofRotateX(xangle);
             ofTranslate(pointCloudPos);
             
-            ofEnableDepthTest();
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
             
+            billboardShader.begin();
+
+            ofEnablePointSprites();
+            texture.getTextureReference().bind();
             mesh.draw();
+            texture.getTextureReference().unbind();
+            ofDisablePointSprites();
+            billboardShader.end();
             ofPopStyle();
             ofPopMatrix();
         }else{
@@ -323,12 +342,11 @@ void testApp::drawPointCloud(){
                 targets[index].choosen = true;
                 ps[i].update();
                 //adjust movement parameter based on Meditation Level
-                ps[i].maxforce = ofMap(meditationLevel, 0, 90, 0.01, 5);
-                ps[i].maxspeed = ofMap(meditationLevel, 0, 90, 20, 5);
+                ps[i].maxforce = ofMap(meditationLevel, 0, 80, 0.01, 5);
+                ps[i].maxspeed = ofMap(meditationLevel, 0, 80, 20, 5);
                 mesh.addVertex(ps[i].getPosition());
                 
             }
-            
             //=========GET CENTER POINT LOCATION=========
             //
             //        ofVec3f centerPoint;
@@ -350,13 +368,11 @@ void testApp::drawPointCloud(){
             //            }
             //        }
             //
-            
             //==================JUST DRAW===============
             ofPushMatrix();
             ofPushStyle();
             ofSetColor(0);
             //point one flip function...
-
             // ofScale(1,-1,1);
             glPointSize(1);
             ofScale(-1, -1,1);
@@ -366,14 +382,9 @@ void testApp::drawPointCloud(){
             ofTranslate(pointCloudPos);
             ofEnableDepthTest();
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
-  
             mesh.draw();
             ofPopStyle();
             ofPopMatrix();
-                        //        for (int i = 0; i<ps.size(); i++){
-            //            ps[i].target_assigned = false;
-            //        }
-            //
         }//end [meditationlevel < 80] if_statment
     }//end the [kinect.frameNew] if_statement
     
@@ -387,7 +398,7 @@ void testApp::drawAnotherPointCloud() {
     if(kinect2.isFrameNew()){
         
         
-        if(meditationLevel>=90){
+        if(meditationLevel >= 80 && meditationLevel< 95){
             ofMesh mesh;
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
@@ -412,7 +423,7 @@ void testApp::drawAnotherPointCloud() {
             ofTranslate(anotherPointCloudPos);
             ofEnableDepthTest();
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
-         
+            
             mesh.draw();
             ofPopMatrix();
         }else{
@@ -463,8 +474,8 @@ void testApp::drawAnotherPointCloud() {
                 targets[index].choosen = true;
                 ps2[i].update();
                 //adjust movement parameter based on Meditation Level
-                ps2[i].maxforce = ofMap(meditationLevel, 0, 90, 0.001, 5);
-                ps2[i].maxspeed = ofMap(meditationLevel, 0, 90, 20, 5);
+                ps2[i].maxforce = ofMap(meditationLevel, 0, 85, 0.01, 5);
+                ps2[i].maxspeed = ofMap(meditationLevel, 0, 85, 20, 5);
                 mesh.addVertex(ps2[i].getPosition());
                 
             }

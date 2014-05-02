@@ -11,6 +11,8 @@
 #include "ofxOsc.h"
 #include "particle.h"
 #include "target.h"
+#include "ofVbo.h"
+
 
 #define PORT 4444
 #define NUM_MSG_STRINGS 20
@@ -93,6 +95,14 @@ public:
     bool resetPosition;
     float ta, tb;
     bool raising;
+    
+    
+    //fianlly, the shader
+    ofShader billboardShader;
+    ofImage texture;
+ 
+    
+    
     
     
 };
