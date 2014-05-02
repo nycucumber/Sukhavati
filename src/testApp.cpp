@@ -118,7 +118,7 @@ void testApp::setup(){
 	}
     ofDisableArbTex();
 	texture.loadImage("dot.png");
-	ofEnableAlphaBlending();
+    ofEnableAlphaBlending();
 
     
 }
@@ -178,7 +178,7 @@ void testApp::update(){
     }
     
     if(raising){
-        whole_scene_y -= 0.3;
+        whole_scene_y -= 0.05;
     }
     if(whole_scene_y < -300 && raising){
         raising = false;
@@ -191,11 +191,10 @@ void testApp::update(){
 
 //--------------------------------------------------------------
 void testApp::draw(){
-    
     if(oculusRift.isSetup()){
         ofNoFill();
         
-        glEnable(GL_DEPTH_TEST);
+       // glEnable(GL_DEPTH_TEST);
         oculusRift.beginLeftEye();
         drawScene();
         oculusRift.endLeftEye();
@@ -204,14 +203,16 @@ void testApp::draw(){
         drawScene();
         oculusRift.endRightEye();
         
+        
         oculusRift.draw();
-        glDisable(GL_DEPTH_TEST);
+        
+      //  glDisable(GL_DEPTH_TEST);
     }else{
         cam.begin();
         drawScene();
         cam.end();
     }
-    
+
     
 }
 //--------------------------------------------------------------
@@ -228,8 +229,6 @@ void testApp::drawScene()
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
-    //    room.setMode(OF_PRIMITIVE_LINE_LOOP);
-    // room.draw();
     drawPointCloud();
     ofPopMatrix();
 #ifdef USE_TWO_KINECTS
@@ -252,57 +251,53 @@ void testApp::drawScene()
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
     if(kinect.isFrameNew()){
-        if(meditationLevel >= 80 && meditationLevel < 95){
+        if(meditationLevel >= 80 ){
             ofVboMesh mesh;
             mesh.setUsage(GL_DYNAMIC_DRAW);
-            mesh.getNormals().resize(2000,ofVec3f(0));
             mesh.setMode(OF_PRIMITIVE_POINTS);
+            mesh.getNormals().resize(2000,ofVec3f(0));  //????????????????????????????????????????
             int w = 640;
             int h = 480;
-            int step = 14;
+            int step = 12;
             int i = 0;
+            float t = (ofGetElapsedTimef()) * 0.9f;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
                     if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
                         mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-                        mesh.setNormal(i,ofVec3f(3+ofNoise(ofGetElapsedTimef()+i),0,0));
+                        mesh.setNormal(i,ofVec3f(8+ofNoise(t+i),0,0));
                         i++;
                     }
                 }
             }
             ofPushMatrix();
-            ofPushStyle();
             ofSetColor(255);
             //point one flip function...
-            ofScale(-1, -1,1);
+            ofScale(-1,-1,1);
             ofRotateY(yangle);
             ofRotateZ(zangle);
             ofRotateX(xangle);
             ofTranslate(pointCloudPos);
             
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
-            
             billboardShader.begin();
-
             ofEnablePointSprites();
             texture.getTextureReference().bind();
             mesh.draw();
             texture.getTextureReference().unbind();
             ofDisablePointSprites();
             billboardShader.end();
-            ofPopStyle();
             ofPopMatrix();
         }else{
             
             
-            ofMesh mesh;
-            ofMesh kinectData;
-            kinectData.setMode(OF_PRIMITIVE_POINTS);
+            ofVboMesh mesh;
+            mesh.setUsage(GL_DYNAMIC_DRAW);
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 14;
+            int step = 12;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -316,11 +311,12 @@ void testApp::drawPointCloud(){
                 }
             }
             firstRun = true;
-            
             //compare the amount between our Particle Vector and all kinect particles
             while(targets.size() > ps.size()){
                 ps.push_back(ofVec3f(ofRandom(-300,300), ofRandom(-300,300),800));
             }
+            //set normals
+            mesh.getNormals().resize(ps.size(),ofVec3f(0));  //????????????????????????????????????????
             //===============SET TARGETS===============
             for(int i=0;i<ps.size();i++){
                 float minDistance = 100000;
@@ -345,6 +341,8 @@ void testApp::drawPointCloud(){
                 ps[i].maxforce = ofMap(meditationLevel, 0, 80, 0.01, 5);
                 ps[i].maxspeed = ofMap(meditationLevel, 0, 80, 20, 5);
                 mesh.addVertex(ps[i].getPosition());
+                mesh.setNormal(i,ofVec3f(10+ ofNoise(ofGetElapsedTimef()+i),0,0));
+                i++;
                 
             }
             //=========GET CENTER POINT LOCATION=========
@@ -371,18 +369,22 @@ void testApp::drawPointCloud(){
             //==================JUST DRAW===============
             ofPushMatrix();
             ofPushStyle();
-            ofSetColor(0);
+            ofSetColor(255);
             //point one flip function...
             // ofScale(1,-1,1);
-            glPointSize(1);
             ofScale(-1, -1,1);
             ofRotateY(yangle);
             ofRotateZ(zangle);
             ofRotateX(xangle);
             ofTranslate(pointCloudPos);
-            ofEnableDepthTest();
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+            billboardShader.begin();
+            ofEnablePointSprites();
+            texture.getTextureReference().bind();
             mesh.draw();
+            texture.getTextureReference().unbind();
+            ofDisablePointSprites();
+            billboardShader.end();
             ofPopStyle();
             ofPopMatrix();
         }//end [meditationlevel < 80] if_statment
@@ -403,7 +405,7 @@ void testApp::drawAnotherPointCloud() {
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 14;
+            int step = 12;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -421,7 +423,6 @@ void testApp::drawAnotherPointCloud() {
             ofRotateZ(z2angle);
             ofRotateX(x2angle);
             ofTranslate(anotherPointCloudPos);
-            ofEnableDepthTest();
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
             
             mesh.draw();
@@ -433,7 +434,7 @@ void testApp::drawAnotherPointCloud() {
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 14;
+            int step = 12;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -505,13 +506,12 @@ void testApp::drawAnotherPointCloud() {
             ofPushMatrix();
             ofPushStyle();
             ofSetColor(0,0,0);
-            ofEnableDepthTest();
             ofScale(-1,-1,1);
             glPointSize(1);
             ofRotateY(y2angle);
             ofRotateZ(z2angle);
             ofRotateX(x2angle);
-            ofTranslate(anotherPointCloudPos);            ofEnableDepthTest();
+            ofTranslate(anotherPointCloudPos);
             ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
             mesh.draw();
             ofPopStyle();
