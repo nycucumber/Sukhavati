@@ -44,6 +44,9 @@ void testApp::setup(){
     p2y = 400;
     p2z = -260;
     
+    
+    step = 9;
+    
     //osculus rift
     oculusRift.baseCamera = &cam;
     camDistance = 400.f;
@@ -67,6 +70,7 @@ void testApp::setup(){
     gui->addFPS();
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
+    gui->addSlider("particle_Size", 0.1, 5.f, 2.f);
     gui->addSlider("Whole_Scene_Position_x", -600.f, 600.f, 404.f);
     gui->addSlider("Whole_Scene_Position_y", -600.f, 600.f, 333.f);
     gui->addSlider("Whole_Scene_Position_z", -600.f, 600.f, -304.f);
@@ -118,9 +122,7 @@ void testApp::setup(){
 	}
     ofDisableArbTex();
 	texture.loadImage("dot.png");
-    ofEnableAlphaBlending();
-
-    
+    particleSize = 2;
 }
 //--------------------------------------------------------------
 void testApp::update(){
@@ -152,12 +154,6 @@ void testApp::update(){
         ofRectangle viewport  =  oculusRift.getOculusViewport();
     }
     
-    
-    //UI
-    
-    
-    //shader
-    
     //update Kinects
     kinect.update();
 #ifdef USE_TWO_KINECTS
@@ -178,7 +174,8 @@ void testApp::update(){
     }
     
     if(raising){
-        whole_scene_y -= 0.05;
+        whole_scene_y -= 0.1;
+        whole_scene_x -= 0.06;
     }
     if(whole_scene_y < -300 && raising){
         raising = false;
@@ -188,13 +185,11 @@ void testApp::update(){
     
     
 }
-
 //--------------------------------------------------------------
 void testApp::draw(){
     if(oculusRift.isSetup()){
         ofNoFill();
         
-       // glEnable(GL_DEPTH_TEST);
         oculusRift.beginLeftEye();
         drawScene();
         oculusRift.endLeftEye();
@@ -203,24 +198,20 @@ void testApp::draw(){
         drawScene();
         oculusRift.endRightEye();
         
-        
         oculusRift.draw();
         
-      //  glDisable(GL_DEPTH_TEST);
     }else{
         cam.begin();
         drawScene();
         cam.end();
     }
-
+    
     
 }
 //--------------------------------------------------------------
 
 void testApp::drawScene()
 {
-	
-    
     pointLight.enable();
     ofPushMatrix();
     ofRotateX(scene_rx);
@@ -250,76 +241,93 @@ void testApp::drawScene()
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
-    if(kinect.isFrameNew()){
-        if(meditationLevel >= 80 ){
-            ofVboMesh mesh;
-            mesh.setUsage(GL_DYNAMIC_DRAW);
-            mesh.setMode(OF_PRIMITIVE_POINTS);
-            mesh.getNormals().resize(2000,ofVec3f(0));  //????????????????????????????????????????
-            int w = 640;
-            int h = 480;
-            int step = 12;
-            int i = 0;
-            float t = (ofGetElapsedTimef()) * 0.9f;
-            vector<target> targets;
-            for(int y=0;y<h;y+=step){
-                for(int x=0;x<w;x+=step){
-                    if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
-                        mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-                        mesh.setNormal(i,ofVec3f(8+ofNoise(t+i),0,0));
-                        i++;
-                    }
+    //when user is in meditation mode, show the clear image of his/her body
+    if(meditationLevel >= 80){
+        ofVboMesh mesh;
+        mesh.setUsage(GL_DYNAMIC_DRAW);
+        mesh.setMode(OF_PRIMITIVE_POINTS);
+        mesh.getNormals().resize(5000,ofVec3f(0));  //????????????????????????????????????????
+        int w = 640;
+        int h = 480;
+        int i = 0;
+        float t = (ofGetElapsedTimef()) * 0.9f;
+        vector<target> targets;
+        for(int y=0;y<h;y+=step){
+            for(int x=0;x<w;x+=step){
+                if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
+                    mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                    mesh.setNormal(i,ofVec3f(particleSize+ofNoise(t+i),0,0));
+                    i++;
                 }
             }
-            ofPushMatrix();
-            ofSetColor(255);
-            //point one flip function...
-            ofScale(-1,-1,1);
-            ofRotateY(yangle);
-            ofRotateZ(zangle);
-            ofRotateX(xangle);
-            ofTranslate(pointCloudPos);
-            
-            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
-            billboardShader.begin();
-            ofEnablePointSprites();
-            texture.getTextureReference().bind();
-            mesh.draw();
-            texture.getTextureReference().unbind();
-            ofDisablePointSprites();
-            billboardShader.end();
-            ofPopMatrix();
-        }else{
-            
-            
-            ofVboMesh mesh;
-            mesh.setUsage(GL_DYNAMIC_DRAW);
-            mesh.setMode(OF_PRIMITIVE_POINTS);
-            int w = 640;
-            int h = 480;
-            int step = 12;
-            vector<target> targets;
-            for(int y=0;y<h;y+=step){
-                for(int x=0;x<w;x+=step){
-                    if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
-                        targets.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-                        if(firstRun == false){
-                            ps.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
-                        }
-                        
+        }
+        ofPushMatrix();
+        ofSetColor(255);
+        //   glDisable(GL_DEPTH_TEST);
+        
+        //point one flip function...
+        ofScale(-1,-1,1);
+        ofRotateY(yangle);
+        ofRotateZ(zangle);
+        ofRotateX(xangle);
+        ofTranslate(pointCloudPos);
+        
+        ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+        billboardShader.begin();
+        ofEnablePointSprites();
+        texture.getTextureReference().bind();
+        mesh.draw();
+        texture.getTextureReference().unbind();
+        ofDisablePointSprites();
+        billboardShader.end();
+        //glEnable(GL_DEPTH_TEST);
+        
+        ofPopMatrix();
+    }else{
+        ofVboMesh mesh;
+        mesh.setUsage(GL_DYNAMIC_DRAW);
+        mesh.setMode(OF_PRIMITIVE_POINTS);
+        int w = 640;
+        int h = 480;
+        vector<target> targets;
+        for(int y=0;y<h;y+=step){
+            for(int x=0;x<w;x+=step){
+                if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
+                    targets.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                    if(firstRun == false){
+                        ps.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
                     }
+                    
                 }
             }
-            firstRun = true;
-            //compare the amount between our Particle Vector and all kinect particles
-            while(targets.size() > ps.size()){
-                ps.push_back(ofVec3f(ofRandom(-300,300), ofRandom(-300,300),800));
-            }
-            //set normals
-            mesh.getNormals().resize(ps.size(),ofVec3f(0));  //????????????????????????????????????????
-            //===============SET TARGETS===============
-            for(int i=0;i<ps.size();i++){
-                float minDistance = 100000;
+        }
+        firstRun = true;
+        //compare the amount between our Particle Vector and all kinect particles
+        while(targets.size() > ps.size()){
+            ps.push_back(ofVec3f(ofRandom(-300,300), ofRandom(-300,300) , 800));
+        }
+        //set normals
+        mesh.getNormals().resize(ps.size(),ofVec3f(0));  //????????????????????????????????????????
+        //===============SET TARGETS===============
+        for(int i=0;i<ps.size();i++){
+            //=========== if meditationlevel is too low, make particles move totally randomly ======
+            if (meditationLevel < 15) {
+                
+                ps[i].seek(ofVec3f(
+                                   ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1),
+                                   ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1),
+                                   ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1)
+                                   )
+                           );
+                
+                
+                
+                ps[i].update();
+                ps[i].maxforce = ofNoise(ofGetElapsedTimef());
+                ps[i].maxspeed = ofNoise(ofGetElapsedTimef()) * 20;
+            }else{
+                
+                float minDistance = 10000000000000;
                 float index = 0;
                 
                 for(int b=0;b<targets.size();b++){
@@ -332,80 +340,101 @@ void testApp::drawPointCloud(){
                         }
                     }
                 }
-                // cout<<"the "<<i<<"'th particle's"<<" minimum distance is "<<minDistance<<" .......his index in [targets] is: "<<index<<endl;
+                //apply targets to each particle
+                //                float randomN = ofRandom(0,100);
+                //                float afterMap =  ofMap(meditationLevel, 10, 80, 50, 3);
+                //                if(randomN > 0 && randomN < afterMap){
+                //                    ps[i].seek(ofVec3f(
+                //                                       ofGetElapsedTimef() * 100000 ,
+                //                                       ofGetElapsedTimef() * 100000 ,
+                //                                       ofGetElapsedTimef() * 100000
+                //                                       )
+                //                               );
+                //                    ps[i].target_assigned = true;
+                //                    targets[index].choosen = true;
+                //                    ps[i].update();
+                //                    //adjust movement parameter based on Meditation Level
+                //                    ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) * 1;
+                //                    ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 30;
+                //
+                //                    // make a few particles to move completely randomly
+                //                }else{
                 ps[i].seek(targets[index].location);
                 ps[i].target_assigned = true;
                 targets[index].choosen = true;
                 ps[i].update();
                 //adjust movement parameter based on Meditation Level
-                ps[i].maxforce = ofMap(meditationLevel, 0, 80, 0.01, 5);
-                ps[i].maxspeed = ofMap(meditationLevel, 0, 80, 20, 5);
-                mesh.addVertex(ps[i].getPosition());
-                mesh.setNormal(i,ofVec3f(10+ ofNoise(ofGetElapsedTimef()+i),0,0));
-                i++;
-                
+                if(meditationLevel > 60){
+                    ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) * 2;
+                    ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 10;
+                }else if(meditationLevel > 40 && meditationLevel <= 60){
+                    ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) * 1;
+                    ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 7;
+                }else{
+                    ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) / 2 ;
+                    ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 16;
+                }
+                //                }
             }
-            //=========GET CENTER POINT LOCATION=========
-            //
-            //        ofVec3f centerPoint;
-            //        ofVec3f Sum;
-            //        Sum.set(0, 0,0);
-            //        int count = 0;
-            //
-            //        for(int i=0;i<ps.size();i+=20){
-            //            count++;
-            //            Sum+=ps[i].location;
-            //        }
-            //
-            //        centerPoint = Sum / count;
-            //        cout<<centerPoint<<endl;
-            //
-            //        for (int i = 0; i<ps.size(); i++){
-            //            if(ps[i].target_assigned==false){
-            //                ps[i].seek(centerPoint+ofVec3f(ofRandom(-300,300),ofRandom(-300,300),ofRandom(-300,300)));
-            //            }
-            //        }
-            //
-            //==================JUST DRAW===============
-            ofPushMatrix();
-            ofPushStyle();
-            ofSetColor(255);
-            //point one flip function...
-            // ofScale(1,-1,1);
-            ofScale(-1, -1,1);
-            ofRotateY(yangle);
-            ofRotateZ(zangle);
-            ofRotateX(xangle);
-            ofTranslate(pointCloudPos);
-            ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
-            billboardShader.begin();
-            ofEnablePointSprites();
-            texture.getTextureReference().bind();
-            mesh.draw();
-            texture.getTextureReference().unbind();
-            ofDisablePointSprites();
-            billboardShader.end();
-            ofPopStyle();
-            ofPopMatrix();
-        }//end [meditationlevel < 80] if_statment
-    }//end the [kinect.frameNew] if_statement
-    
-    
+            mesh.addVertex(ps[i].getPosition());
+            mesh.setNormal(i,ofVec3f(particleSize+ofNoise(ofGetElapsedTimef()+i),0,0));
+            i++;
+            
+            
+        }
+        //=========GET CENTER POINT LOCATION=========
+        //
+        //        ofVec3f centerPoint;
+        //        ofVec3f Sum;
+        //        Sum.set(0, 0,0);
+        //        int count = 0;
+        //
+        //        for(int i=0;i<ps.size();i+=20){
+        //            count++;
+        //            Sum+=ps[i].location;
+        //        }
+        //
+        //        centerPoint = Sum / count;
+        //        cout<<centerPoint<<endl;
+        //
+        //        for (int i = 0; i<ps.size(); i++){
+        //            if(ps[i].target_assigned==false){
+        //                ps[i].seek(centerPoint+ofVec3f(ofRandom(-300,300),ofRandom(-300,300),ofRandom(-300,300)));
+        //            }
+        //        }
+        //
+        //==================JUST DRAW===============
+        ofPushMatrix();
+        ofPushStyle();
+        ofSetColor(255);
+        //point one flip function...
+        // ofScale(1,-1,1);
+        ofScale(-1, -1,1);
+        ofRotateY(yangle);
+        ofRotateZ(zangle);
+        ofRotateX(xangle);
+        ofTranslate(pointCloudPos);
+        ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
+        billboardShader.begin();
+        ofEnablePointSprites();
+        texture.getTextureReference().bind();
+        mesh.draw();
+        texture.getTextureReference().unbind();
+        ofDisablePointSprites();
+        billboardShader.end();
+        ofPopStyle();
+        ofPopMatrix();
+    }
 }
-
-
 
 #ifdef USE_TWO_KINECTS
 void testApp::drawAnotherPointCloud() {
     if(kinect2.isFrameNew()){
-        
-        
         if(meditationLevel >= 80 && meditationLevel< 95){
             ofMesh mesh;
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 12;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -434,7 +463,6 @@ void testApp::drawAnotherPointCloud() {
             mesh.setMode(OF_PRIMITIVE_POINTS);
             int w = 640;
             int h = 480;
-            int step = 12;
             vector<target> targets;
             for(int y=0;y<h;y+=step){
                 for(int x=0;x<w;x+=step){
@@ -581,13 +609,19 @@ void testApp::guiEvent(ofxUIEventArgs &e)
     }else if(e.getName() == "Whole_Scene_Rotate_z"){
         ofxUISlider *slider = e.getSlider();
         scene_rz = slider->getScaledValue();
+    }else if(e.getName() == "particle_Size"){
+        ofxUISlider *slider = e.getSlider();
+        particleSize = slider->getScaledValue();
     }
+    
+    
+    
 }
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     
-    float step = 30;
+    //  float step = 30;
     
     switch (key) {
             

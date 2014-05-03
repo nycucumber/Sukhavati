@@ -63,6 +63,7 @@ public:
     float xangle,yangle,zangle;
     float x2angle,y2angle,z2angle;
     float roomRotateX,roomRotateY,roomRotateZ;
+    int step;
     //UI
     ofxUICanvas * gui;
     void exitUI();
@@ -100,7 +101,7 @@ public:
     //fianlly, the shader
     ofShader billboardShader;
     ofImage texture;
- 
+    float particleSize;
     
     
     
