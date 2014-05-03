@@ -45,7 +45,7 @@ void testApp::setup(){
     p2z = -260;
     
     
-    step = 9;
+    step = 13;
     
     //osculus rift
     oculusRift.baseCamera = &cam;
@@ -53,20 +53,20 @@ void testApp::setup(){
     cam.setDistance(camDistance);
     oculusRift.setup();
     
-    
     //camera
     cam.disableMouseInput();
+    cam.disableMouseMiddleButton();
     cam.begin();
     cam.end();
     
     //Serial Communication
-    serial.listDevices();
-    serial.setup();
+//    serial.listDevices();
+//    serial.setup();
     
     
     //GUI
     gui = new ofxUICanvas();
-    gui->setTheme(0);
+    gui->setTheme(2);
     gui->addFPS();
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
@@ -121,12 +121,16 @@ void testApp::setup(){
 		billboardShader.load("shadersGL2/Billboard");
 	}
     ofDisableArbTex();
-	texture.loadImage("dot.png");
+    texture.loadImage("dot.png");
+    ofEnableAlphaBlending();
     particleSize = 2;
+    
+    
+    //implementation
+    blackScreen = true;
 }
 //--------------------------------------------------------------
 void testApp::update(){
-    //    room.setPosition(0, 0, 0);
     ofSoundUpdate();
     //OSC::::
     while (receiver.hasWaitingMessages()) {
@@ -141,10 +145,10 @@ void testApp::update(){
     distractionSound.setVolume(ofMap(meditationLevel, 0, 100, 1, 0.5));
     meditationSound.setVolume(ofMap(meditationLevel, 0, 100, 0, 1));
     //serial input
-    if(serial.available()>0){
-        analogRead = serial.readByte();
-        cout<< "serial input data -> " <<analogRead<<endl;
-    }
+//    if(serial.available()>0){
+//        analogRead = serial.readByte();
+//        cout<< "serial input data -> " <<analogRead<<endl;
+//    }
     //kinect #one position
     pointCloudPos.set(px,py,pz);
     //kinect #two position
@@ -173,9 +177,9 @@ void testApp::update(){
         resetPosition = false;
     }
     
-    if(raising){
-        whole_scene_y -= 0.1;
-        whole_scene_x -= 0.06;
+    if(raising && !blackScreen){
+        whole_scene_y -= 0.3;
+        whole_scene_x -= 0.1;
     }
     if(whole_scene_y < -300 && raising){
         raising = false;
@@ -187,23 +191,28 @@ void testApp::update(){
 }
 //--------------------------------------------------------------
 void testApp::draw(){
-    if(oculusRift.isSetup()){
-        ofNoFill();
-        
-        oculusRift.beginLeftEye();
-        drawScene();
-        oculusRift.endLeftEye();
-        
-        oculusRift.beginRightEye();
-        drawScene();
-        oculusRift.endRightEye();
-        
-        oculusRift.draw();
-        
+    
+    if (blackScreen) {
+        ofBackground(0, 0, 0);
     }else{
-        cam.begin();
-        drawScene();
-        cam.end();
+        if(oculusRift.isSetup()){
+            ofNoFill();
+            
+            oculusRift.beginLeftEye();
+            drawScene();
+            oculusRift.endLeftEye();
+            
+            oculusRift.beginRightEye();
+            drawScene();
+            oculusRift.endRightEye();
+            
+            oculusRift.draw();
+            
+        }else{
+            cam.begin();
+            drawScene();
+            cam.end();
+        }
     }
     
     
@@ -214,10 +223,23 @@ void testApp::drawScene()
 {
     pointLight.enable();
     ofPushMatrix();
+    
+    
     ofRotateX(scene_rx);
     ofRotateY(scene_ry);
     ofRotateZ(scene_rz);
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
+    //draw room
+    ofPushMatrix();
+    ofEnableDepthTest();
+    ofSetColor(255);
+    ofRotateX(270);
+    ofRotateY(roomRotateY);
+    ofTranslate(roomModelPos);
+    roomModel.draw();
+    ofPopMatrix();
+    
+    
     //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
     drawPointCloud();
@@ -228,25 +250,26 @@ void testApp::drawScene()
     drawAnotherPointCloud();
     ofPopMatrix();
 #endif
-    ofEnableDepthTest();
-    ofPushMatrix();
-    ofSetColor(255);
-    ofRotateX(270);
-    ofRotateY(roomRotateY);
-    ofTranslate(roomModelPos);
-    roomModel.draw();
-    ofPopMatrix();
+    
+    
+    
     ofPopMatrix();
 }
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
     //when user is in meditation mode, show the clear image of his/her body
+    
+    //===================================================
+    //DEEP MEDITATION MODE===============================
+    //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+    //===================================================
+
     if(meditationLevel >= 80){
         ofVboMesh mesh;
         mesh.setUsage(GL_DYNAMIC_DRAW);
         mesh.setMode(OF_PRIMITIVE_POINTS);
-        mesh.getNormals().resize(5000,ofVec3f(0));  //????????????????????????????????????????
+        mesh.getNormals().resize(5000,ofVec3f(0));
         int w = 640;
         int h = 480;
         int i = 0;
@@ -263,15 +286,13 @@ void testApp::drawPointCloud(){
         }
         ofPushMatrix();
         ofSetColor(255);
-        //   glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
         
-        //point one flip function...
         ofScale(-1,-1,1);
         ofRotateY(yangle);
         ofRotateZ(zangle);
         ofRotateX(xangle);
         ofTranslate(pointCloudPos);
-        
         ofScale(kinectImageScale, kinectImageScale, kinectImageScale);
         billboardShader.begin();
         ofEnablePointSprites();
@@ -280,24 +301,31 @@ void testApp::drawPointCloud(){
         texture.getTextureReference().unbind();
         ofDisablePointSprites();
         billboardShader.end();
-        //glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
         
         ofPopMatrix();
+        
+        //===================================================
+        //LOW MEDITATION MODE===============================
+        //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+        //===================================================
+        
     }else{
         ofVboMesh mesh;
         mesh.setUsage(GL_DYNAMIC_DRAW);
         mesh.setMode(OF_PRIMITIVE_POINTS);
         int w = 640;
         int h = 480;
+        //Get original data from kinect and strore them into 'targets'
         vector<target> targets;
         for(int y=0;y<h;y+=step){
             for(int x=0;x<w;x+=step){
                 if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
                     targets.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
+                    //arrange all of the particle to the correct position in the first time so they won't seek the same target...
                     if(firstRun == false){
                         ps.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
                     }
-                    
                 }
             }
         }
@@ -307,27 +335,22 @@ void testApp::drawPointCloud(){
             ps.push_back(ofVec3f(ofRandom(-300,300), ofRandom(-300,300) , 800));
         }
         //set normals
-        mesh.getNormals().resize(ps.size(),ofVec3f(0));  //????????????????????????????????????????
+        mesh.getNormals().resize(ps.size(),ofVec3f(0));
         //===============SET TARGETS===============
         for(int i=0;i<ps.size();i++){
             //=========== if meditationlevel is too low, make particles move totally randomly ======
             if (meditationLevel < 15) {
-                
                 ps[i].seek(ofVec3f(
                                    ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1),
                                    ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1),
                                    ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1)
                                    )
                            );
-                
-                
-                
                 ps[i].update();
                 ps[i].maxforce = ofNoise(ofGetElapsedTimef());
                 ps[i].maxspeed = ofNoise(ofGetElapsedTimef()) * 20;
             }else{
-                
-                float minDistance = 10000000000000;
+                float minDistance = 1000000;
                 float index = 0;
                 
                 for(int b=0;b<targets.size();b++){
@@ -359,7 +382,18 @@ void testApp::drawPointCloud(){
                 //
                 //                    // make a few particles to move completely randomly
                 //                }else{
-                ps[i].seek(targets[index].location);
+                
+                
+                
+                ps[i].seek(targets[index].location
+                           + ofVec3f(
+                                     ofNoise(ofGetElapsedTimef()) * 2000 * ofMap(meditationLevel, 15, 80, 1, 0) * ofRandom(-1,1),
+                                     ofNoise(ofGetElapsedTimef()) * 2000 * ofMap(meditationLevel, 15, 80, 1, 0) * ofRandom(-1,1),
+                                     ofNoise(ofGetElapsedTimef()) * 2000 * ofMap(meditationLevel, 15, 80, 1, 0) * ofRandom(-1,1)
+                           )
+                           );
+                
+                
                 ps[i].target_assigned = true;
                 targets[index].choosen = true;
                 ps[i].update();
@@ -409,6 +443,7 @@ void testApp::drawPointCloud(){
         ofSetColor(255);
         //point one flip function...
         // ofScale(1,-1,1);
+        glDisable(GL_DEPTH_TEST);
         ofScale(-1, -1,1);
         ofRotateY(yangle);
         ofRotateZ(zangle);
@@ -422,6 +457,7 @@ void testApp::drawPointCloud(){
         texture.getTextureReference().unbind();
         ofDisablePointSprites();
         billboardShader.end();
+        glEnable(GL_DEPTH_TEST);
         ofPopStyle();
         ofPopMatrix();
     }
@@ -613,9 +649,6 @@ void testApp::guiEvent(ofxUIEventArgs &e)
         ofxUISlider *slider = e.getSlider();
         particleSize = slider->getScaledValue();
     }
-    
-    
-    
 }
 
 //--------------------------------------------------------------
@@ -762,6 +795,10 @@ void testApp::keyPressed(int key){
             break;
         case 'r':
             resetPosition = true;
+            break;
+            
+        case 'b':
+            blackScreen = !blackScreen;
             break;
     }
     

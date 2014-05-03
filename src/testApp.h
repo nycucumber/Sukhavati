@@ -104,6 +104,8 @@ public:
     float particleSize;
     
     
+    //implementation part
+    bool blackScreen;
     
     
 };
