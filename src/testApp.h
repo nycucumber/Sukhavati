@@ -18,7 +18,7 @@
 
 #define PORT 4444
 #define NUM_MSG_STRINGS 20
-#define TIME_TO_GETTING_TOGETHER 20
+#define TIME_TO_GETTING_TOGETHER 25
 
 class testApp : public ofBaseApp{
 
@@ -121,6 +121,10 @@ public:
     float start_time;
     bool gather;
     bool getStartTime;
+    
+    
+    //plane
+    float planeX, planeY, planeZ;
     
     
 };

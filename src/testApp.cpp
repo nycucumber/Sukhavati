@@ -19,10 +19,13 @@ void testApp::setup(){
     roomRotateZ=0;
     
     //3d model
-    roomModel.loadModel("APR14.3ds");
+    roomModel.loadModel("final.3ds");
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
+    
+    //whole scene position
+    beginScnePositions();
     
     //kinect
     kinect.setRegistration();
@@ -51,16 +54,21 @@ void testApp::setup(){
     camDistance = 400.f;
   //  cam.setDistance(camDistance);
     oculusRift.setup();
-    
-    //camera
-//    cam.disableMouseInput();
-//    cam.disableMouseMiddleButton();
+
     cam.begin();
     cam.end();
     
-    //Serial Communication
-    //    serial.listDevices();
-    //    serial.setup();
+    
+    
+    //plane
+    planeX = 768.f;
+    planeY = 0.f;
+    planeZ = 0.f;
+    
+    
+
+    
+    
     
     
     //GUI
@@ -71,12 +79,15 @@ void testApp::setup(){
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
     gui->addSlider("particle_Size", 0.1, 5.f, 2.f);
     float a = 4000.f;
-    gui->addSlider("Whole_Scene_Position_x", -a, a, 404.f);
-    gui->addSlider("Whole_Scene_Position_y", -a, a, 333.f);
-    gui->addSlider("Whole_Scene_Position_z", -a, a, -304.f);
-    gui->addSlider("Whole_Scene_Rotate_x", 0.f, 360.f, 81.f);
-    gui->addSlider("Whole_Scene_Rotate_y", 0.f, 360.f, 266.f);
-    gui->addSlider("Whole_Scene_Rotate_z", 0.f, 360.f, 83.f);
+    gui->addSlider("Whole_Scene_Position_x", -a, a, whole_scene_x);
+    gui->addSlider("Whole_Scene_Position_y", -a, a, whole_scene_y);
+    gui->addSlider("Whole_Scene_Position_z", -a, a, whole_scene_z);
+    gui->addSlider("PlaneX",-a,a,planeX);
+    gui->addSlider("PlaneY",-a,a,planeY);
+    gui->addSlider("PlaneZ",-a,a,planeZ);
+    gui->addSlider("Whole_Scene_Rotate_x", 0.f, 360.f, scene_rx);
+    gui->addSlider("Whole_Scene_Rotate_y", 0.f, 360.f, scene_ry);
+    gui->addSlider("Whole_Scene_Rotate_z", 0.f, 360.f, scene_rz);
     gui->addToggle("FULLSCREEN", false);
     //    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
     gui->autoSizeToFitWidgets();
@@ -108,8 +119,7 @@ void testApp::setup(){
     pinkNoiseVolume = 1;
     
     
-    //y is the flying height
-    beginScnePositions();
+   
     
     resetPosition = true;
     
@@ -134,6 +144,8 @@ void testApp::setup(){
     //Timing:
     gather = false;
     getStartTime = false;
+   
+    
 }
 //--------------------------------------------------------------
 void testApp::update(){
@@ -259,7 +271,16 @@ void testApp::drawScene()
     ofRotateY(scene_ry);
     ofRotateZ(scene_rz);
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
-    //draw room
+    
+    
+    ofPushMatrix();
+	ofRotate(90, 0, 0, -1);
+    ofTranslate(planeX, planeY,planeZ);
+	ofDrawGridPlane(10000.0f, 10.0f, false);
+	ofPopMatrix();
+    
+    
+    //   ----   room   ----
     ofPushMatrix();
     ofEnableDepthTest();
     ofSetColor(255);
@@ -268,7 +289,8 @@ void testApp::drawScene()
     ofTranslate(roomModelPos);
     roomModel.draw();
     ofPopMatrix();
-    
+    //   ----   end room   ----
+
     ofPushMatrix();
     drawPointCloud();
     ofPopMatrix();
@@ -602,6 +624,15 @@ void testApp::guiEvent(ofxUIEventArgs &e)
     }else if(e.getName() == "particle_Size"){
         ofxUISlider *slider = e.getSlider();
         particleSize = slider->getScaledValue();
+    }else if(e.getName() == "PlaneX"){
+        ofxUISlider *slider = e.getSlider();
+        planeX = slider->getScaledValue();
+    }else if(e.getName() == "PlaneY"){
+        ofxUISlider *slider = e.getSlider();
+        planeY = slider->getScaledValue();
+    }else if(e.getName() == "PlaneZ"){
+        ofxUISlider *slider = e.getSlider();
+        planeZ = slider->getScaledValue();
     }
 }
 
