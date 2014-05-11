@@ -19,7 +19,7 @@ void testApp::setup(){
     roomRotateZ=0;
     
     //3d model
-    roomModel.loadModel("final.3ds");
+    roomModel.loadModel("APR14.3ds");
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
@@ -39,29 +39,28 @@ void testApp::setup(){
     py = 370;
     pz = -560;
     
-    
+    //point cloud 2 position values:
     p2x = -280;
     p2y = 400;
     p2z = -260;
     
-    
-    step = 13;
+    step = 10;
     
     //osculus rift
     oculusRift.baseCamera = &cam;
     camDistance = 400.f;
-    cam.setDistance(camDistance);
+  //  cam.setDistance(camDistance);
     oculusRift.setup();
     
     //camera
-    cam.disableMouseInput();
-    cam.disableMouseMiddleButton();
+//    cam.disableMouseInput();
+//    cam.disableMouseMiddleButton();
     cam.begin();
     cam.end();
     
     //Serial Communication
-//    serial.listDevices();
-//    serial.setup();
+    //    serial.listDevices();
+    //    serial.setup();
     
     
     //GUI
@@ -71,9 +70,10 @@ void testApp::setup(){
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
     gui->addSlider("particle_Size", 0.1, 5.f, 2.f);
-    gui->addSlider("Whole_Scene_Position_x", -600.f, 600.f, 404.f);
-    gui->addSlider("Whole_Scene_Position_y", -600.f, 600.f, 333.f);
-    gui->addSlider("Whole_Scene_Position_z", -600.f, 600.f, -304.f);
+    float a = 4000.f;
+    gui->addSlider("Whole_Scene_Position_x", -a, a, 404.f);
+    gui->addSlider("Whole_Scene_Position_y", -a, a, 333.f);
+    gui->addSlider("Whole_Scene_Position_z", -a, a, -304.f);
     gui->addSlider("Whole_Scene_Rotate_x", 0.f, 360.f, 81.f);
     gui->addSlider("Whole_Scene_Rotate_y", 0.f, 360.f, 266.f);
     gui->addSlider("Whole_Scene_Rotate_z", 0.f, 360.f, 83.f);
@@ -89,28 +89,27 @@ void testApp::setup(){
     
     
     //sound
-    meditationSound.loadSound("BOWL.mp3");
-    meditationSound.setVolume(1.3);
-    meditationSound.setMultiPlay(false);
-    meditationSound.play();
-    meditationSound.setLoop(true);
-    distractionSound.loadSound("whitenoise.mp3");
-    distractionSound.setVolume(0);
-    distractionSound.play();
-    distractionSound.setLoop(true);
+    bowlSound.loadSound("BOWL.mp3");
+    bowlSound.setVolume(0);
+    bowlSound.setMultiPlay(false);
+    bowlSound.play();
+    bowlSound.setLoop(true);
+    bowlSoundSwitcher = false;
+    
+    spaceSound.loadSound("whitenoise.mp3");
+    spaceSound.setVolume(0);
+    spaceSound.play();
+    spaceSound.setLoop(true);
+    
+    pinkNoise.loadSound("pinkNoise.mp3");
+    pinkNoise.setVolume(0);
+    pinkNoise.setMultiPlay(false);
+    pinkNoise.setLoop(true);
+    pinkNoiseVolume = 1;
+    
     
     //y is the flying height
-    
-    whole_scene_x = 404;
-    whole_scene_y = 333;
-    whole_scene_z = -304;
-    
-    scene_rx = 81;
-    scene_ry = 266;
-    scene_rz = 83;
-    
-    //Primitive Box -  Room
-    // room.set(900);
+    beginScnePositions();
     
     resetPosition = true;
     
@@ -122,33 +121,63 @@ void testApp::setup(){
 	}
     ofDisableArbTex();
     texture.loadImage("dot.png");
-    ofEnableAlphaBlending();
+   // ofEnableAlphaBlending();
     particleSize = 2;
     
     
     //implementation
     blackScreen = true;
+    cam.setFarClip(20000);
+    
+    
+    
+    //Timing:
+    gather = false;
+    getStartTime = false;
 }
 //--------------------------------------------------------------
 void testApp::update(){
+    
+    float nowaTime = ofGetElapsedTimef();
+    
+    
+    if(!gather && !getStartTime){
+        start_time = ofGetElapsedTimef();
+        getStartTime=true;
+    }
+    
+    pinkNoise.setVolume(pinkNoiseVolume);
+    
+    if(nowaTime - start_time  > TIME_TO_GETTING_TOGETHER){
+        gather = true;
+        pinkNoiseVolume -= 0.01;
+    }
+    
+    if(pinkNoiseVolume==0){
+        pinkNoise.stop();
+    }
+    
+
     ofSoundUpdate();
     //OSC::::
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(&m);
         if (m.getAddress() == "/meditation") {
+            if(gather){
             meditationLevel =m.getArgAsFloat(0);
-            cout<<meditationLevel<<endl;
+            }
         }
     }
     //Sound Update
-    distractionSound.setVolume(ofMap(meditationLevel, 0, 100, 1, 0.5));
-    meditationSound.setVolume(ofMap(meditationLevel, 0, 100, 0, 1));
-    //serial input
-//    if(serial.available()>0){
-//        analogRead = serial.readByte();
-//        cout<< "serial input data -> " <<analogRead<<endl;
-//    }
+    if(gather){
+        spaceSound.setVolume(ofMap(meditationLevel, 0, 100, 1, 0));
+        bowlSound.setVolume(ofMap(meditationLevel, 0, 100, 0, 1));
+    }else{
+        spaceSound.setVolume(0);
+        bowlSound.setVolume(0);
+        
+    }
     //kinect #one position
     pointCloudPos.set(px,py,pz);
     //kinect #two position
@@ -166,15 +195,21 @@ void testApp::update(){
     
     //reset initial position for next user
     if(resetPosition == true){
-        whole_scene_x = 404;
-        whole_scene_y = 333;
-        whole_scene_z = -304;
-        scene_rx = 81;
-        scene_ry = 266;
-        scene_rz = 83;
-        ta = ofGetElapsedTimef();
+        
+        beginScnePositions();
+
+        
         raising = true;
+        gather = false;
+        getStartTime=false;
+        
+        pinkNoise.setVolume(1);
+        pinkNoise.play();
+        meditationLevel = 0;
+        
         resetPosition = false;
+        
+      
     }
     
     if(raising && !blackScreen){
@@ -184,16 +219,12 @@ void testApp::update(){
     if(whole_scene_y < -300 && raising){
         raising = false;
     }
-    
-    
-    
-    
 }
 //--------------------------------------------------------------
 void testApp::draw(){
     
     if (blackScreen) {
-        ofBackground(0, 0, 0);
+        ofBackground(255);
     }else{
         if(oculusRift.isSetup()){
             ofNoFill();
@@ -224,7 +255,6 @@ void testApp::drawScene()
     pointLight.enable();
     ofPushMatrix();
     
-    
     ofRotateX(scene_rx);
     ofRotateY(scene_ry);
     ofRotateZ(scene_rz);
@@ -239,20 +269,14 @@ void testApp::drawScene()
     roomModel.draw();
     ofPopMatrix();
     
-    
-    //DRAW THE 1ST KINECT IMAGE
     ofPushMatrix();
     drawPointCloud();
     ofPopMatrix();
 #ifdef USE_TWO_KINECTS
-    //DRAW THE 2ND KINECT IMAGE
     ofPushMatrix();
     drawAnotherPointCloud();
     ofPopMatrix();
 #endif
-    
-    
-    
     ofPopMatrix();
 }
 
@@ -264,7 +288,7 @@ void testApp::drawPointCloud(){
     //DEEP MEDITATION MODE===============================
     //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
     //===================================================
-
+    
     if(meditationLevel >= 80){
         ofVboMesh mesh;
         mesh.setUsage(GL_DYNAMIC_DRAW);
@@ -277,7 +301,7 @@ void testApp::drawPointCloud(){
         vector<target> targets;
         for(int y=0;y<h;y+=step){
             for(int x=0;x<w;x+=step){
-                if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
+                if(kinect.getDistanceAt(x, y) > 200 && kinect.getDistanceAt(x, y) < 1000){
                     mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
                     mesh.setNormal(i,ofVec3f(particleSize+ofNoise(t+i),0,0));
                     i++;
@@ -286,7 +310,7 @@ void testApp::drawPointCloud(){
         }
         ofPushMatrix();
         ofSetColor(255);
-        glDisable(GL_DEPTH_TEST);
+     //   glDisable(GL_DEPTH_TEST);
         
         ofScale(-1,-1,1);
         ofRotateY(yangle);
@@ -301,15 +325,12 @@ void testApp::drawPointCloud(){
         texture.getTextureReference().unbind();
         ofDisablePointSprites();
         billboardShader.end();
-        glEnable(GL_DEPTH_TEST);
-        
+       // glEnable(GL_DEPTH_TEST);
         ofPopMatrix();
-        
         //===================================================
         //LOW MEDITATION MODE===============================
         //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         //===================================================
-        
     }else{
         ofVboMesh mesh;
         mesh.setUsage(GL_DYNAMIC_DRAW);
@@ -320,7 +341,7 @@ void testApp::drawPointCloud(){
         vector<target> targets;
         for(int y=0;y<h;y+=step){
             for(int x=0;x<w;x+=step){
-                if(kinect.getDistanceAt(x, y)>0&&kinect.getDistanceAt(x, y)<1500){
+                if(kinect.getDistanceAt(x, y) > 200 && kinect.getDistanceAt(x, y) < 1000){
                     targets.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
                     //arrange all of the particle to the correct position in the first time so they won't seek the same target...
                     if(firstRun == false){
@@ -340,19 +361,18 @@ void testApp::drawPointCloud(){
         for(int i=0;i<ps.size();i++){
             //=========== if meditationlevel is too low, make particles move totally randomly ======
             if (meditationLevel < 15) {
+                if(ofGetFrameNum()%20==0){
+                
                 ps[i].seek(ofVec3f(
-                                   ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1),
-                                   ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1),
-                                   ofNoise(ofGetElapsedTimef())*1000000*ofRandom(-1,1)
-                                   )
+                                ofRandom(-6000,6000),ofRandom(-6000,6000),ofRandom(-6000,6000)
+                                )
                            );
+                }
+                
                 ps[i].update();
-                ps[i].maxforce = ofNoise(ofGetElapsedTimef());
-                ps[i].maxspeed = ofNoise(ofGetElapsedTimef()) * 20;
             }else{
                 float minDistance = 1000000;
                 float index = 0;
-                
                 for(int b=0;b<targets.size();b++){
                     if(targets[b].choosen==false){
                         float distance;
@@ -363,37 +383,13 @@ void testApp::drawPointCloud(){
                         }
                     }
                 }
-                //apply targets to each particle
-                //                float randomN = ofRandom(0,100);
-                //                float afterMap =  ofMap(meditationLevel, 10, 80, 50, 3);
-                //                if(randomN > 0 && randomN < afterMap){
-                //                    ps[i].seek(ofVec3f(
-                //                                       ofGetElapsedTimef() * 100000 ,
-                //                                       ofGetElapsedTimef() * 100000 ,
-                //                                       ofGetElapsedTimef() * 100000
-                //                                       )
-                //                               );
-                //                    ps[i].target_assigned = true;
-                //                    targets[index].choosen = true;
-                //                    ps[i].update();
-                //                    //adjust movement parameter based on Meditation Level
-                //                    ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) * 1;
-                //                    ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 30;
-                //
-                //                    // make a few particles to move completely randomly
-                //                }else{
-                
-                
-                
                 ps[i].seek(targets[index].location
                            + ofVec3f(
                                      ofNoise(ofGetElapsedTimef()) * 2000 * ofMap(meditationLevel, 15, 80, 1, 0) * ofRandom(-1,1),
                                      ofNoise(ofGetElapsedTimef()) * 2000 * ofMap(meditationLevel, 15, 80, 1, 0) * ofRandom(-1,1),
                                      ofNoise(ofGetElapsedTimef()) * 2000 * ofMap(meditationLevel, 15, 80, 1, 0) * ofRandom(-1,1)
-                           )
+                                     )
                            );
-                
-                
                 ps[i].target_assigned = true;
                 targets[index].choosen = true;
                 ps[i].update();
@@ -404,46 +400,27 @@ void testApp::drawPointCloud(){
                 }else if(meditationLevel > 40 && meditationLevel <= 60){
                     ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) * 1;
                     ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 7;
-                }else{
+                }else if(meditationLevel >= 15){
                     ps[i].maxforce = ofNoise(ofGetElapsedTimeMicros()) / 2 ;
                     ps[i].maxspeed = ofNoise(ofGetElapsedTimeMicros()) * 16;
+                }else{
+                    if(ofGetFrameNum()%50==0){
+                        ps[i].maxforce = ofRandom(-0.01,0.1);
+                        ps[i].maxspeed = ofRandom(1,3);
+                    }
                 }
-                //                }
             }
             mesh.addVertex(ps[i].getPosition());
             mesh.setNormal(i,ofVec3f(particleSize+ofNoise(ofGetElapsedTimef()+i),0,0));
             i++;
-            
-            
         }
-        //=========GET CENTER POINT LOCATION=========
-        //
-        //        ofVec3f centerPoint;
-        //        ofVec3f Sum;
-        //        Sum.set(0, 0,0);
-        //        int count = 0;
-        //
-        //        for(int i=0;i<ps.size();i+=20){
-        //            count++;
-        //            Sum+=ps[i].location;
-        //        }
-        //
-        //        centerPoint = Sum / count;
-        //        cout<<centerPoint<<endl;
-        //
-        //        for (int i = 0; i<ps.size(); i++){
-        //            if(ps[i].target_assigned==false){
-        //                ps[i].seek(centerPoint+ofVec3f(ofRandom(-300,300),ofRandom(-300,300),ofRandom(-300,300)));
-        //            }
-        //        }
-        //
         //==================JUST DRAW===============
         ofPushMatrix();
         ofPushStyle();
         ofSetColor(255);
         //point one flip function...
         // ofScale(1,-1,1);
-        glDisable(GL_DEPTH_TEST);
+       // glDisable(GL_DEPTH_TEST);
         ofScale(-1, -1,1);
         ofRotateY(yangle);
         ofRotateZ(zangle);
@@ -457,7 +434,7 @@ void testApp::drawPointCloud(){
         texture.getTextureReference().unbind();
         ofDisablePointSprites();
         billboardShader.end();
-        glEnable(GL_DEPTH_TEST);
+    //    glEnable(GL_DEPTH_TEST);
         ofPopStyle();
         ofPopMatrix();
     }
@@ -544,28 +521,6 @@ void testApp::drawAnotherPointCloud() {
                 mesh.addVertex(ps2[i].getPosition());
                 
             }
-            
-            //=========GET CENTER POINT LOCATION=========
-            //
-            //        ofVec3f centerPoint;
-            //        ofVec3f Sum;
-            //        Sum.set(0, 0,0);
-            //        int count = 0;
-            //
-            //        for(int i=0;i<ps.size();i+=20){
-            //            count++;
-            //            Sum+=ps[i].location;
-            //        }
-            //
-            //        centerPoint = Sum / count;
-            //        cout<<centerPoint<<endl;
-            //
-            //        for (int i = 0; i<ps.size(); i++){
-            //            if(ps[i].target_assigned==false){
-            //                ps[i].seek(centerPoint+ofVec3f(ofRandom(-300,300),ofRandom(-300,300),ofRandom(-300,300)));
-            //            }
-            //        }
-            //
             //==================JUST DRAW===============
             ofPushMatrix();
             ofPushStyle();
@@ -608,7 +563,6 @@ void testApp::closeKinect(){
 void testApp::exitUI(){
     gui->saveSettings("settings.xml");
     delete gui;
-    
 }
 
 void testApp::guiEvent(ofxUIEventArgs &e)
@@ -809,6 +763,18 @@ void testApp::keyPressed(int key){
 }
 
 //--------------------------------------------------------------
+void testApp::beginScnePositions(){
+    whole_scene_x = 404;
+    whole_scene_y = 333;
+    whole_scene_z = -304;
+    scene_rx = 81;
+    scene_ry = 266;
+    scene_rz = 83;
+}
+
+
+//--------------------------------------------------------------
+
 void testApp::keyReleased(int key){
     
 }

@@ -12,10 +12,13 @@
 #include "particle.h"
 #include "target.h"
 #include "ofVbo.h"
+#include "ofxAssimpModelLoader.h"
+
 
 
 #define PORT 4444
 #define NUM_MSG_STRINGS 20
+#define TIME_TO_GETTING_TOGETHER 20
 
 class testApp : public ofBaseApp{
 
@@ -35,6 +38,7 @@ public:
     void drawPointCloud();
     void closeKinect();
     void drawScene();
+    void beginScnePositions();
     
 #ifdef USE_TWO_KINECTS
 	ofxKinect kinect2;
@@ -46,16 +50,16 @@ public:
     //oculus rift
     int angle;
     ofxOculusRift oculusRift;
-    ofEasyCam cam;
+    ofCamera cam;
     ofVec3f camPos;
     ofx3DModelLoader roomModel;
+   // ofxAssimpModelLoader roomModel;
     //lights setting
     ofLight pointLight;
     ofVec3f lightPos, lightDirection, roomModelPos, pointCloudPos,anotherPointCloudPos;
     ofColor lightColor;
     //texts
     ofTrueTypeFont zero;
-    ofBoxPrimitive Room;
     float px,py,pz,p2x,p2y,p2z;
     bool showRoom;
     float kinectImageScale;
@@ -70,6 +74,7 @@ public:
     void guiEvent(ofxUIEventArgs &e);
     
     //particle system
+    vector<particle> cloud;
     vector<particle> ps;
     vector<particle> ps2;
     bool firstRun2;
@@ -82,9 +87,11 @@ public:
     float camDistance;
     
     //sound
-    ofSoundPlayer meditationSound;
-    ofSoundPlayer distractionSound;
-    
+    ofSoundPlayer bowlSound;
+    ofSoundPlayer spaceSound;
+    ofSoundPlayer pinkNoise;
+    float pinkNoiseVolume;
+    bool bowlSoundSwitcher;
     
     //positions...
     float whole_scene_x,whole_scene_y,whole_scene_z;
@@ -94,7 +101,7 @@ public:
 
     //Timer
     bool resetPosition;
-    float ta, tb;
+   // float ta, tb;
     bool raising;
     
     
@@ -106,6 +113,14 @@ public:
     
     //implementation part
     bool blackScreen;
+    
+    
+    ofTrueTypeFont reading;
+    
+    //timing
+    float start_time;
+    bool gather;
+    bool getStartTime;
     
     
 };
