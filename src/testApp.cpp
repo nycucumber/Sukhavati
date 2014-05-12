@@ -19,7 +19,7 @@ void testApp::setup(){
     roomRotateZ=0;
     
     //3d model
-    roomModel.loadModel("final.3ds");
+    roomModel.loadModel("APR14.3ds");
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
@@ -51,26 +51,13 @@ void testApp::setup(){
     
     //osculus rift
     oculusRift.baseCamera = &cam;
-    camDistance = 400.f;
-  //  cam.setDistance(camDistance);
     oculusRift.setup();
-
     cam.begin();
     cam.end();
-    
-    
-    
     //plane
     planeX = 768.f;
     planeY = 0.f;
     planeZ = 0.f;
-    
-    
-
-    
-    
-    
-    
     //GUI
     gui = new ofxUICanvas();
     gui->setTheme(2);
@@ -92,8 +79,6 @@ void testApp::setup(){
     //    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
     gui->autoSizeToFitWidgets();
     ofAddListener(gui->newGUIEvent, this, &testApp::guiEvent);
-    
-    
     //osc
     meditationLevel = 100;
     receiver.setup(PORT);
@@ -118,9 +103,6 @@ void testApp::setup(){
     pinkNoise.setLoop(true);
     pinkNoiseVolume = 1;
     
-    
-   
-    
     resetPosition = true;
     
     //shader::
@@ -139,16 +121,32 @@ void testApp::setup(){
     blackScreen = true;
     cam.setFarClip(20000);
     
-    
-    
     //Timing:
     gather = false;
     getStartTime = false;
+    
+    //Ambient Cloud
+    cloudField  = 5000;
+    for (int i=0; i< 2000; i++) {
+        cloud.push_back(ofVec3f(ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField)));
+    }
    
     
 }
 //--------------------------------------------------------------
 void testApp::update(){
+    
+    //ambient cloud movement
+
+    
+    for (int i=0; i<cloud.size(); i++) {
+            if(ofGetFrameNum()%30==0){
+            cloud[i].seek(ofVec3f(ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField)));
+            }
+            cloud[i].update();
+    }
+    
+    
     
     float nowaTime = ofGetElapsedTimef();
     
@@ -225,11 +223,18 @@ void testApp::update(){
     }
     
     if(raising && !blackScreen){
-        whole_scene_y -= 0.3;
-        whole_scene_x -= 0.1;
-    }
-    if(whole_scene_y < -300 && raising){
-        raising = false;
+            if(whole_scene_x < -610){
+                whole_scene_x+=2;
+            }
+            if(whole_scene_y < -295){
+                whole_scene_y+=2;
+            }
+            
+        
+        }
+    
+    if(whole_scene_x >= -610 && whole_scene_y >= -295){
+        raising=false;
     }
 }
 //--------------------------------------------------------------
@@ -272,11 +277,32 @@ void testApp::drawScene()
     ofRotateZ(scene_rz);
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
     
-    
     ofPushMatrix();
 	ofRotate(90, 0, 0, -1);
     ofTranslate(planeX, planeY,planeZ);
-	ofDrawGridPlane(10000.0f, 10.0f, false);
+	ofDrawGridPlane(10000.0f, 5.0f, false);
+    
+    ofVboMesh theCloud;
+    theCloud.setUsage(GL_DYNAMIC_DRAW);
+    theCloud.setMode(OF_PRIMITIVE_POINTS);
+    theCloud.getNormals().resize(cloudField,ofVec3f(0));
+    for (int i=0; i<cloud.size();i++) {
+        theCloud.addVertex(cloud[i].location);
+        theCloud.setNormal(i,ofVec3f(
+                                     ofMap(meditationLevel, 0, 100, 5, 0)
+                                     +ofNoise(ofGetElapsedTimef()+i),0,0));
+
+    }
+    billboardShader.begin();
+    ofEnablePointSprites();
+    texture.getTextureReference().bind();
+    theCloud.draw();
+    texture.getTextureReference().unbind();
+    ofDisablePointSprites();
+    billboardShader.end();
+
+    
+    
 	ofPopMatrix();
     
     
@@ -323,7 +349,7 @@ void testApp::drawPointCloud(){
         vector<target> targets;
         for(int y=0;y<h;y+=step){
             for(int x=0;x<w;x+=step){
-                if(kinect.getDistanceAt(x, y) > 200 && kinect.getDistanceAt(x, y) < 1000){
+                if(kinect.getDistanceAt(x, y) > 200 && kinect.getDistanceAt(x, y) < 1300){
                     mesh.addVertex(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
                     mesh.setNormal(i,ofVec3f(particleSize+ofNoise(t+i),0,0));
                     i++;
@@ -363,7 +389,7 @@ void testApp::drawPointCloud(){
         vector<target> targets;
         for(int y=0;y<h;y+=step){
             for(int x=0;x<w;x+=step){
-                if(kinect.getDistanceAt(x, y) > 200 && kinect.getDistanceAt(x, y) < 1000){
+                if(kinect.getDistanceAt(x, y) > 200 && kinect.getDistanceAt(x, y) < 1300){
                     targets.push_back(ofVec3f(kinect.getWorldCoordinateAt(x, y)));
                     //arrange all of the particle to the correct position in the first time so they won't seek the same target...
                     if(firstRun == false){
@@ -795,8 +821,8 @@ void testApp::keyPressed(int key){
 
 //--------------------------------------------------------------
 void testApp::beginScnePositions(){
-    whole_scene_x = 404;
-    whole_scene_y = 333;
+    whole_scene_x = -4000;
+    whole_scene_y = -4000;
     whole_scene_z = -304;
     scene_rx = 81;
     scene_ry = 266;

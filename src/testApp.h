@@ -75,6 +75,7 @@ public:
     
     //particle system
     vector<particle> cloud;
+    float cloudField;
     vector<particle> ps;
     vector<particle> ps2;
     bool firstRun2;
@@ -97,7 +98,6 @@ public:
     float whole_scene_x,whole_scene_y,whole_scene_z;
     float scene_rx,scene_ry,scene_rz;
     
-    ofShader blur;
 
     //Timer
     bool resetPosition;
