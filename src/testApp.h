@@ -122,8 +122,10 @@ public:
     
     ofTrueTypeFont reading;
     
-    //timing
-
+    //shot
+    bool tvCloseUp;
+    bool roomCloseUp;
+    bool roomFarShot;
 
     
     
@@ -135,6 +137,7 @@ public:
     float tv_x, tv_y, tv_z;
     float image_x, image_y, image_z, image_scale;
     
+
     
     
 };

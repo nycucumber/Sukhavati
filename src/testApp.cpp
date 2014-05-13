@@ -175,6 +175,10 @@ void testApp::setup(){
     tvroomMaterial.setDiffuseColor(ofColor(0,0,0));
 	tvroomMaterial.setSpecularColor(ofColor(200, 200, 200, 255));
     
+    tvCloseUp = false;
+    roomCloseUp = false;
+    roomFarShot = false;
+    
 }
 //--------------------------------------------------------------
 void testApp::update(){
@@ -259,6 +263,32 @@ void testApp::update(){
     }
     
    
+    
+    if(tvCloseUp){
+        
+        if(tv_x <= 380){
+            tv_z += 10;
+        }
+        
+    }else{
+        tv_z = -182;
+        }
+    
+    
+    if(roomCloseUp){
+        whole_scene_x = 650;
+        whole_scene_y = 374;
+        whole_scene_z = -304;
+    }else if(roomFarShot){
+        whole_scene_x = 177;
+        whole_scene_y = -950;
+        whole_scene_z = 2660;
+    }else{
+        whole_scene_x = 295;
+        whole_scene_y = -610;
+        whole_scene_z = -304;
+    }
+    
 }
 //--------------------------------------------------------------
 void testApp::draw(){
@@ -323,7 +353,9 @@ void testApp::drawInitScene(){
     light.setPosition(0, 0, tv_z + 50);
     light.draw();
     tv.setScale(ofMap(tv_z, -1000, 0, 0.1, 1), ofMap(tv_z, -1000, 0, 0.1, 1), ofMap(tv_z, -1000, 0, 0.1, 1));
+ 
     ofTranslate(tv_x, tv_y,tv_z);
+  
 //    tv.setPosition(tv_x, tv_y, tv_z);
     tv.drawFaces();
     ofScale(image_scale * ofMap(tv_z, -1000, 0, 0.1, 1), image_scale * ofMap(tv_z, -1000, 0, 0.1, 1),image_scale * ofMap(tv_z, -1000, 0, 0.1, 1));
@@ -912,9 +944,19 @@ void testApp::keyPressed(int key){
             scene_one = !scene_one;
             break;
             
+        case '/':
+            gui->toggleVisible();
+            break;
+        case 'c':
+            tvCloseUp = !tvCloseUp;
+            break;
+        case 'a':
+            roomCloseUp = !roomCloseUp;
+            break;
+        case 'v':
+            roomFarShot = !roomFarShot;
+            break;
     }
-    
-    
     
     
     
@@ -933,6 +975,8 @@ void testApp::beginScnePositions(){
     image_y = 54.89;
     image_z = -17.78;
     image_scale = 0.62;
+
+    
 }
 
 
