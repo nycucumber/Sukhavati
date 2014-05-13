@@ -52,15 +52,18 @@ void testApp::setup(){
     //osculus rift
     oculusRift.baseCamera = &cam;
     oculusRift.setup();
+    cam.enableMouseInput();
+    cam.enableMouseMiddleButton();
     cam.begin();
     cam.end();
+    
     //plane
     planeX = 768.f;
     planeY = 0.f;
     planeZ = 0.f;
     //GUI
     gui = new ofxUICanvas();
-    gui->setTheme(2);
+//    gui->setTheme();
     gui->addFPS();
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
@@ -112,9 +115,9 @@ void testApp::setup(){
 		billboardShader.load("shadersGL2/Billboard");
 	}
     ofDisableArbTex();
-    texture.loadImage("dot.png");
-   // ofEnableAlphaBlending();
-    particleSize = 2;
+    texture.loadImage("dot2.png");
+    ofEnableAlphaBlending();
+    particleSize = 4;
     
     
     //implementation
@@ -202,12 +205,10 @@ void testApp::update(){
 #ifdef USE_TWO_KINECTS
     kinect2.update();
 #endif
-    
     //reset initial position for next user
     if(resetPosition == true){
         
         beginScnePositions();
-
         
         raising = true;
         gather = false;
@@ -218,8 +219,7 @@ void testApp::update(){
         meditationLevel = 0;
         
         resetPosition = false;
-        
-      
+
     }
     
     if(raising && !blackScreen){
@@ -293,16 +293,16 @@ void testApp::drawScene()
                                      +ofNoise(ofGetElapsedTimef()+i),0,0));
 
     }
+    
     billboardShader.begin();
+    glDisable(GL_DEPTH_TEST);
     ofEnablePointSprites();
     texture.getTextureReference().bind();
     theCloud.draw();
     texture.getTextureReference().unbind();
     ofDisablePointSprites();
     billboardShader.end();
-
-    
-    
+    glEnable(GL_DEPTH_TEST);
 	ofPopMatrix();
     
     
@@ -358,7 +358,7 @@ void testApp::drawPointCloud(){
         }
         ofPushMatrix();
         ofSetColor(255);
-     //   glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
         
         ofScale(-1,-1,1);
         ofRotateY(yangle);
@@ -373,7 +373,7 @@ void testApp::drawPointCloud(){
         texture.getTextureReference().unbind();
         ofDisablePointSprites();
         billboardShader.end();
-       // glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
         ofPopMatrix();
         //===================================================
         //LOW MEDITATION MODE===============================
@@ -468,7 +468,7 @@ void testApp::drawPointCloud(){
         ofSetColor(255);
         //point one flip function...
         // ofScale(1,-1,1);
-       // glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
         ofScale(-1, -1,1);
         ofRotateY(yangle);
         ofRotateZ(zangle);
@@ -482,7 +482,7 @@ void testApp::drawPointCloud(){
         texture.getTextureReference().unbind();
         ofDisablePointSprites();
         billboardShader.end();
-    //    glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
         ofPopStyle();
         ofPopMatrix();
     }

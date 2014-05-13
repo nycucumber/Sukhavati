@@ -50,7 +50,7 @@ public:
     //oculus rift
     int angle;
     ofxOculusRift oculusRift;
-    ofCamera cam;
+    ofEasyCam cam;
     ofVec3f camPos;
     ofx3DModelLoader roomModel;
    // ofxAssimpModelLoader roomModel;
