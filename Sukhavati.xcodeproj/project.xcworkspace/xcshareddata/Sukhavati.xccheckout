@@ -10,6 +10,8 @@
 	<string>Sukhavati</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
+		<key>4E61B0E2-9F82-475C-A932-BACE78E5FB1F</key>
+		<string>https://github.com/neilmendoza/ofxPostProcessing.git</string>
 		<key>5EB8E950-7075-418D-9D9D-8DF029E29DD2</key>
 		<string>https://github.com/nycucumber/Sukhavati.git</string>
 		<key>7503DD3A-178F-403A-AC49-97891D914C92</key>
@@ -21,6 +23,8 @@
 	<string>Sukhavati.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
+		<key>4E61B0E2-9F82-475C-A932-BACE78E5FB1F</key>
+		<string>../../../../../addons/ofxPostProcessing</string>
 		<key>5EB8E950-7075-418D-9D9D-8DF029E29DD2</key>
 		<string>../..</string>
 		<key>7503DD3A-178F-403A-AC49-97891D914C92</key>
@@ -43,6 +47,14 @@
 			<string>7F810D89-F658-42A0-B762-D6DF7245B039</string>
 			<key>IDESourceControlWCCName</key>
 			<string>ofxOculusRift</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4E61B0E2-9F82-475C-A932-BACE78E5FB1F</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ofxPostProcessing</string>
 		</dict>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>

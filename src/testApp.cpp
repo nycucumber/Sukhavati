@@ -4,6 +4,9 @@
 void testApp::setup(){
     //general
     ofBackground(255);
+    
+    //switch scene
+    scene_one = true;
     //kinect one image rotate parameters
     xangle = 25;
     yangle = -79;
@@ -23,6 +26,16 @@ void testApp::setup(){
     roomModel.setScale(50, 50, 50);
     roomModelPos.set(-90,-270,-930);
     showRoom = true;
+    showTV = true;
+    
+    
+    //tv model
+    tv.loadModel("tv.3ds");
+    tv.setScale(2, 2, 2);
+    tv.setPosition(tv_x, tv_y, tv_z);
+    tvScreen.loadMovie("tvScreen.gif");
+    tvScreen.play();
+    
     
     //whole scene position
     beginScnePositions();
@@ -63,7 +76,7 @@ void testApp::setup(){
     planeZ = 0.f;
     //GUI
     gui = new ofxUICanvas();
-//    gui->setTheme();
+    //    gui->setTheme();
     gui->addFPS();
     gui->addSlider("Meditation_Level",0.0,100.0,100.0);
     gui->addSlider("background_color", 0.f, 255.f, 0.f);
@@ -72,12 +85,27 @@ void testApp::setup(){
     gui->addSlider("Whole_Scene_Position_x", -a, a, whole_scene_x);
     gui->addSlider("Whole_Scene_Position_y", -a, a, whole_scene_y);
     gui->addSlider("Whole_Scene_Position_z", -a, a, whole_scene_z);
-    gui->addSlider("PlaneX",-a,a,planeX);
-    gui->addSlider("PlaneY",-a,a,planeY);
-    gui->addSlider("PlaneZ",-a,a,planeZ);
+    
     gui->addSlider("Whole_Scene_Rotate_x", 0.f, 360.f, scene_rx);
     gui->addSlider("Whole_Scene_Rotate_y", 0.f, 360.f, scene_ry);
     gui->addSlider("Whole_Scene_Rotate_z", 0.f, 360.f, scene_rz);
+    
+    gui->addSlider("whole_scene_scale", -0.01, 20, whole_scene_scale);
+    gui->addSlider("PlaneX",-a,a,planeX);
+    gui->addSlider("PlaneY",-a,a,planeY);
+    gui->addSlider("PlaneZ",-a,a,planeZ);
+    
+    gui->addSlider("tv_x", -1000, 1000, tv_x);
+    gui->addSlider("tv_y", -1000, 1000, tv_y);
+    gui->addSlider("tv_z", -1000, 1000, tv_z);
+    
+    gui->addSlider("gif_x", -1000, 1000, image_x);
+    gui->addSlider("gif_y", -1000, 1000, image_y);
+    gui->addSlider("gif_z", -1000, 1000, image_z);
+    gui->addSlider("gif_scale", -0.1, 1, 1);
+    
+    
+    
     gui->addToggle("FULLSCREEN", false);
     //    gui->addLabel("Point Cloud A-rotate-x, y, z//potition:p(x), o(y), [](z)////Point Cloud B - rotate:j(x), k(y), l(z)//position:h(x), g(y),f(z)");
     gui->autoSizeToFitWidgets();
@@ -100,11 +128,16 @@ void testApp::setup(){
     spaceSound.play();
     spaceSound.setLoop(true);
     
-    pinkNoise.loadSound("pinkNoise.mp3");
-    pinkNoise.setVolume(0);
-    pinkNoise.setMultiPlay(false);
-    pinkNoise.setLoop(true);
-    pinkNoiseVolume = 1;
+    
+    aqua.loadSound("Aqua_Syndrome_I.mp3");
+    aqua.play();
+    aqua.setLoop(true);
+    
+    
+    //LIGHTING
+    //ahahahahahahahahahahah
+    
+    
     
     resetPosition = true;
     
@@ -125,140 +158,151 @@ void testApp::setup(){
     cam.setFarClip(20000);
     
     //Timing:
-    gather = false;
-    getStartTime = false;
+
+    raising = true;
     
     //Ambient Cloud
-    cloudField  = 5000;
+    cloudField  = 3000;
     for (int i=0; i< 2000; i++) {
         cloud.push_back(ofVec3f(ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField)));
     }
-   
+    
+    
+    
+    //tv room
+    tvroom.set(1800);
+    tvroomMaterial.setShininess( 10 );
+    tvroomMaterial.setDiffuseColor(ofColor(0,0,0));
+	tvroomMaterial.setSpecularColor(ofColor(200, 200, 200, 255));
     
 }
 //--------------------------------------------------------------
 void testApp::update(){
     
-    //ambient cloud movement
-
-    
-    for (int i=0; i<cloud.size(); i++) {
-            if(ofGetFrameNum()%30==0){
+    //AMBIENT CLOUD MOVEMENT
+    for (int i=0; i<cloud.size(); i++){
+        if(ofGetFrameNum()%30==0){
             cloud[i].seek(ofVec3f(ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField),ofRandom(-cloudField,cloudField)));
-            }
-            cloud[i].update();
+        }
+        cloud[i].update();
     }
     
-    
-    
-    float nowaTime = ofGetElapsedTimef();
-    
-    
-    if(!gather && !getStartTime){
-        start_time = ofGetElapsedTimef();
-        getStartTime=true;
-    }
-    
-    pinkNoise.setVolume(pinkNoiseVolume);
-    
-    if(nowaTime - start_time  > TIME_TO_GETTING_TOGETHER){
-        gather = true;
-        pinkNoiseVolume -= 0.01;
-    }
-    
-    if(pinkNoiseVolume==0){
-        pinkNoise.stop();
-    }
-    
-
-    ofSoundUpdate();
     //OSC::::
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(&m);
         if (m.getAddress() == "/meditation") {
-            if(gather){
-            meditationLevel =m.getArgAsFloat(0);
-            }
+                meditationLevel =m.getArgAsFloat(0);
         }
     }
-    //Sound Update
-    if(gather){
+    
+    //SET SOUND VOLUME BASED ON PARAMETERS
+    if(scene_one==false){
         spaceSound.setVolume(ofMap(meditationLevel, 0, 100, 1, 0));
         bowlSound.setVolume(ofMap(meditationLevel, 0, 100, 0, 1));
+        aqua.setVolume(0);
     }else{
         spaceSound.setVolume(0);
         bowlSound.setVolume(0);
-        
+        aqua.setVolume(1);
     }
-    //kinect #one position
+    
+    //SET KINECT PARTICLES POSITIONS
     pointCloudPos.set(px,py,pz);
-    //kinect #two position
     anotherPointCloudPos.set(p2x,p2y,p2z);
     
+    //SETUP OCULUS RIFT
     if(oculusRift.isSetup()){
         ofRectangle viewport  =  oculusRift.getOculusViewport();
     }
     
+    
+    //reset initial position for next user
+    
+    if(resetPosition == true){
+        beginScnePositions();
+        raising = true;
+        meditationLevel = 0;
+        resetPosition = false;
+    }
+//    
+//    if(scene_one == false){ //when we get into scene two
+//        //when we are in scene two, stop [aqua]
+//        if(raising && !blackScreen){
+//            if(whole_scene_x < 295){
+//                whole_scene_x+=10;
+//            }
+//            if(whole_scene_y < -610){
+//                whole_scene_y+=10;
+//            }
+//        }
+//        if(whole_scene_x >= 295 && whole_scene_y >= -610){
+//            raising=false;
+//        }
+//    }
+//    
+//    
+    
+    
+    //UPLOAD ALL SOUNDS
+    ofSoundUpdate();
+    tvScreen.update();
+    
+    if(!scene_one){
+        
     //update Kinects
     kinect.update();
 #ifdef USE_TWO_KINECTS
     kinect2.update();
 #endif
-    //reset initial position for next user
-    if(resetPosition == true){
         
-        beginScnePositions();
-        
-        raising = true;
-        gather = false;
-        getStartTime=false;
-        
-        pinkNoise.setVolume(1);
-        pinkNoise.play();
-        meditationLevel = 0;
-        
-        resetPosition = false;
-
     }
     
-    if(raising && !blackScreen){
-            if(whole_scene_x < -610){
-                whole_scene_x+=2;
-            }
-            if(whole_scene_y < -295){
-                whole_scene_y+=2;
-            }
-            
-        
-        }
-    
-    if(whole_scene_x >= -610 && whole_scene_y >= -295){
-        raising=false;
-    }
+   
 }
 //--------------------------------------------------------------
 void testApp::draw(){
     
+    
+    
     if (blackScreen) {
-        ofBackground(255);
+        ofClear(255, 255, 255);
     }else{
         if(oculusRift.isSetup()){
-            ofNoFill();
-            
+           
+//            ---------------LEFT EYE------------
             oculusRift.beginLeftEye();
-            drawScene();
+
+            if(scene_one){
+                drawInitScene();
+            }else{
+                drawScene();
+            }
+            
             oculusRift.endLeftEye();
             
+//            ---------------RIGHT EYE-----------
             oculusRift.beginRightEye();
-            drawScene();
+            
+            if(scene_one){
+                drawInitScene();
+            }else{
+                drawScene();
+            }
+            
             oculusRift.endRightEye();
             
             oculusRift.draw();
             
         }else{
             cam.begin();
-            drawScene();
+            
+            if(scene_one){
+                drawInitScene();
+            }else{
+                drawScene();
+            }
+            
             cam.end();
         }
     }
@@ -266,21 +310,50 @@ void testApp::draw(){
     
 }
 //--------------------------------------------------------------
+void testApp::drawInitScene(){
+
+//    ofDrawGrid(1000.0f, 8.0f, true, true, true, true);
+
+    
+
+    ofEnableDepthTest();
+    tvroom.drawFaces();
+
+    light.enable();
+    light.setPosition(0, 0, tv_z + 50);
+    light.draw();
+    tv.setScale(ofMap(tv_z, -1000, 0, 0.1, 1), ofMap(tv_z, -1000, 0, 0.1, 1), ofMap(tv_z, -1000, 0, 0.1, 1));
+    ofTranslate(tv_x, tv_y,tv_z);
+//    tv.setPosition(tv_x, tv_y, tv_z);
+    tv.drawFaces();
+    ofScale(image_scale * ofMap(tv_z, -1000, 0, 0.1, 1), image_scale * ofMap(tv_z, -1000, 0, 0.1, 1),image_scale * ofMap(tv_z, -1000, 0, 0.1, 1));
+    ofRotateX(180);
+    ofTranslate(image_x, image_y, image_z);
+
+    tvScreen.draw(0, 0);
+
+
+  
+    light.disable();
+
+    
+}
+//--------------------------------------------------------------
 
 void testApp::drawScene()
 {
-    pointLight.enable();
+
+    light.enable();
     ofPushMatrix();
     
+    
+    ofScale(whole_scene_scale,whole_scene_scale,whole_scene_scale);
     ofRotateX(scene_rx);
     ofRotateY(scene_ry);
     ofRotateZ(scene_rz);
     ofTranslate(whole_scene_x, whole_scene_y, whole_scene_z);
-    
     ofPushMatrix();
-	ofRotate(90, 0, 0, -1);
-    ofTranslate(planeX, planeY,planeZ);
-	ofDrawGridPlane(10000.0f, 5.0f, false);
+
     
     ofVboMesh theCloud;
     theCloud.setUsage(GL_DYNAMIC_DRAW);
@@ -291,7 +364,7 @@ void testApp::drawScene()
         theCloud.setNormal(i,ofVec3f(
                                      ofMap(meditationLevel, 0, 100, 5, 0)
                                      +ofNoise(ofGetElapsedTimef()+i),0,0));
-
+        
     }
     
     billboardShader.begin();
@@ -307,16 +380,19 @@ void testApp::drawScene()
     
     
     //   ----   room   ----
-    ofPushMatrix();
-    ofEnableDepthTest();
-    ofSetColor(255);
-    ofRotateX(270);
-    ofRotateY(roomRotateY);
-    ofTranslate(roomModelPos);
-    roomModel.draw();
-    ofPopMatrix();
+    
+    if(showRoom){
+        ofPushMatrix();
+        ofEnableDepthTest();
+        ofSetColor(255);
+        ofRotateX(270);
+        ofRotateY(roomRotateY);
+        ofTranslate(roomModelPos);
+        roomModel.draw();
+        ofPopMatrix();
+    }
     //   ----   end room   ----
-
+    
     ofPushMatrix();
     drawPointCloud();
     ofPopMatrix();
@@ -330,13 +406,10 @@ void testApp::drawScene()
 
 //--------------------------------------------------------------
 void testApp::drawPointCloud(){
-    //when user is in meditation mode, show the clear image of his/her body
-    
     //===================================================
     //DEEP MEDITATION MODE===============================
     //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
     //===================================================
-    
     if(meditationLevel >= 80){
         ofVboMesh mesh;
         mesh.setUsage(GL_DYNAMIC_DRAW);
@@ -359,7 +432,6 @@ void testApp::drawPointCloud(){
         ofPushMatrix();
         ofSetColor(255);
         glDisable(GL_DEPTH_TEST);
-        
         ofScale(-1,-1,1);
         ofRotateY(yangle);
         ofRotateZ(zangle);
@@ -410,13 +482,13 @@ void testApp::drawPointCloud(){
             //=========== if meditationlevel is too low, make particles move totally randomly ======
             if (meditationLevel < 15) {
                 if(ofGetFrameNum()%20==0){
-                
-                ps[i].seek(ofVec3f(
-                                ofRandom(-6000,6000),ofRandom(-6000,6000),ofRandom(-6000,6000)
-                                )
-                           );
+                    
+                    
+                    ps[i].seek(ofVec3f(
+                                       ofRandom(-6000,6000),ofRandom(-6000,6000),ofRandom(-6000,6000)
+                                       )
+                               );
                 }
-                
                 ps[i].update();
             }else{
                 float minDistance = 1000000;
@@ -659,6 +731,30 @@ void testApp::guiEvent(ofxUIEventArgs &e)
     }else if(e.getName() == "PlaneZ"){
         ofxUISlider *slider = e.getSlider();
         planeZ = slider->getScaledValue();
+    }else if(e.getName() == "whole_scene_scale"){
+        ofxUISlider *slider = e.getSlider();
+        whole_scene_scale = slider->getScaledValue();
+    }else if(e.getName() == "tv_x"){
+        ofxUISlider *slider = e.getSlider();
+        tv_x = slider->getScaledValue();
+    }else if(e.getName() == "tv_y"){
+        ofxUISlider *slider = e.getSlider();
+        tv_y = slider->getScaledValue();
+    }else if(e.getName() == "tv_z"){
+        ofxUISlider *slider = e.getSlider();
+        tv_z = slider->getScaledValue();
+    }else if(e.getName() == "gif_x"){
+        ofxUISlider *slider = e.getSlider();
+        image_x = slider->getScaledValue();
+    }else if(e.getName() == "gif_y"){
+        ofxUISlider *slider = e.getSlider();
+        image_y = slider->getScaledValue();
+    }else if(e.getName() == "gif_z"){
+        ofxUISlider *slider = e.getSlider();
+        image_z = slider->getScaledValue();
+    }else if(e.getName() == "gif_scale"){
+        ofxUISlider *slider = e.getSlider();
+        image_scale = slider->getScaledValue();
     }
 }
 
@@ -811,6 +907,11 @@ void testApp::keyPressed(int key){
         case 'b':
             blackScreen = !blackScreen;
             break;
+            
+        case 's':
+            scene_one = !scene_one;
+            break;
+            
     }
     
     
@@ -821,12 +922,17 @@ void testApp::keyPressed(int key){
 
 //--------------------------------------------------------------
 void testApp::beginScnePositions(){
-    whole_scene_x = -4000;
-    whole_scene_y = -4000;
+    whole_scene_x = 295;
+    whole_scene_y = -610;
     whole_scene_z = -304;
     scene_rx = 81;
     scene_ry = 266;
     scene_rz = 83;
+    whole_scene_scale = 1;
+    image_x = -261.08;
+    image_y = 54.89;
+    image_z = -17.78;
+    image_scale = 0.62;
 }
 
 

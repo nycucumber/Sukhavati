@@ -15,7 +15,6 @@
 #include "ofxAssimpModelLoader.h"
 
 
-
 #define PORT 4444
 #define NUM_MSG_STRINGS 20
 #define TIME_TO_GETTING_TOGETHER 25
@@ -38,6 +37,7 @@ public:
     void drawPointCloud();
     void closeKinect();
     void drawScene();
+    void drawInitScene();
     void beginScnePositions();
     
 #ifdef USE_TWO_KINECTS
@@ -53,15 +53,19 @@ public:
     ofEasyCam cam;
     ofVec3f camPos;
     ofx3DModelLoader roomModel;
+    ofVideoPlayer tvScreen;
+    ofxAssimpModelLoader tv;
+    ofBoxPrimitive tvroom;
+    ofMaterial tvroomMaterial;
    // ofxAssimpModelLoader roomModel;
     //lights setting
-    ofLight pointLight;
+    ofLight light;
     ofVec3f lightPos, lightDirection, roomModelPos, pointCloudPos,anotherPointCloudPos;
-    ofColor lightColor;
     //texts
     ofTrueTypeFont zero;
     float px,py,pz,p2x,p2y,p2z;
     bool showRoom;
+    bool showTV;
     float kinectImageScale;
     float analogRead;
     float xangle,yangle,zangle;
@@ -91,11 +95,12 @@ public:
     ofSoundPlayer bowlSound;
     ofSoundPlayer spaceSound;
     ofSoundPlayer pinkNoise;
+    ofSoundPlayer aqua;
     float pinkNoiseVolume;
     bool bowlSoundSwitcher;
     
     //positions...
-    float whole_scene_x,whole_scene_y,whole_scene_z;
+    float whole_scene_x,whole_scene_y,whole_scene_z, whole_scene_scale;
     float scene_rx,scene_ry,scene_rz;
     
 
@@ -118,13 +123,18 @@ public:
     ofTrueTypeFont reading;
     
     //timing
-    float start_time;
-    bool gather;
-    bool getStartTime;
+
+
     
     
     //plane
     float planeX, planeY, planeZ;
+    
+    //scene swtich
+    bool scene_one;
+    float tv_x, tv_y, tv_z;
+    float image_x, image_y, image_z, image_scale;
+    
     
     
 };
